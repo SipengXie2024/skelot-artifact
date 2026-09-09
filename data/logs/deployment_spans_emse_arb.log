@@ -1,0 +1,43 @@
+[deployment_span] chain=arb rpc_url=https://arb-mainnet.g.alchemy.com/v2/Gbim…WqvA
+[deployment_span] archive probe OK: 0x1F98431c8aD98523631AE4a59f267346ea31F984@100000 returned 24536 bytes
+[deployment_span] loading codes + account index from blocks 458863320..458873320 (10000 blocks)
+  2000 blocks, 1436 codes, 1464 addr-mappings
+  4000 blocks, 1851 codes, 1883 addr-mappings
+  6000 blocks, 2194 codes, 2229 addr-mappings
+  8000 blocks, 2594 codes, 2631 addr-mappings
+  10000 blocks, 2895 codes, 2932 addr-mappings
+[deployment_span] scanned 10000 blocks: 2895 unique bytecodes, 2932 code_hash->addr mappings
+[deployment_span] skeleton_mode=emse
+[deployment_span] querying head block...
+[deployment_span] head block: 498227447
+
+[deployment_span] group #1 (skel 0x36b808f28ee440b): 116 members, bytecode 22142 bytes -- sampling 30 with addresses
+  10/30
+  20/30
+  30/30
+[deployment_span] group #1: 30 resolved / 30 attempted; span min=0.0d median=840.4d max=1762.5d (2021-06-23 22:02:53 -> 2026-04-21 09:19:03)
+
+[deployment_span] group #2 (skel 0x8c7667412510f0b4): 45 members, bytecode 1201 bytes -- sampling 30 with addresses
+  10/30
+  20/30
+  30/30
+[deployment_span] group #2: 30 resolved / 30 attempted; span min=0.0d median=246.1d max=267.1d (2025-07-28 03:37:38 -> 2026-04-21 05:22:29)
+
+[deployment_span] group #3 (skel 0xf4b6d9b85bc90ba1): 37 members, bytecode 22962 bytes -- sampling 30 with addresses
+  10/30
+  20/30
+  30/30
+[deployment_span] group #3: 30 resolved / 30 attempted; span min=0.0d median=316.2d max=971.4d (2023-08-09 07:58:56 -> 2026-04-06 18:24:21)
+
+[deployment_span] group #4 (skel 0xf44a4732ed8ea6b3): 33 members, bytecode 45 bytes -- sampling 30 with addresses
+  10/30
+  20/30
+  30/30
+[deployment_span] group #4: 30 resolved / 30 attempted; span min=0.0d median=1265.1d max=1690.1d (2021-09-16 03:43:14 -> 2026-05-03 06:36:19)
+
+[deployment_span] group #5 (skel 0xeecfd92afa643118): 28 members, bytecode 5129 bytes -- sampling 28 with addresses
+  10/28
+  20/28
+[deployment_span] group #5: 28 resolved / 28 attempted; span min=0.0d median=290.5d max=835.4d (2023-08-14 19:57:59 -> 2025-11-27 05:10:22)
+[deployment_span] wrote /home/ubuntu/sipeng/skelot-paper/data/deployment_spans_emse_arb.json
+WALL_SECONDS=612.54

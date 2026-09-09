@@ -1,0 +1,62 @@
+{
+  "rows": [
+    {
+      "bucket": "small",
+      "families": 102,
+      "members": 1200,
+      "naive_s": 158.36943421899997,
+      "skelot_s": 17.503463538999995,
+      "allvar_s": 27.733777253000003,
+      "naive_mb": 8.118032,
+      "skelot_mb": 0.8932,
+      "allvar_mb": 1.050784
+    },
+    {
+      "bucket": "medium",
+      "families": 298,
+      "members": 1736,
+      "naive_s": 2851.034902781,
+      "skelot_s": 499.9885207459996,
+      "allvar_s": 761.951847859999,
+      "naive_mb": 87.877984,
+      "skelot_mb": 16.270232,
+      "allvar_mb": 19.709712
+    },
+    {
+      "bucket": "large",
+      "families": 256,
+      "members": 2111,
+      "naive_s": 22303.88199448702,
+      "skelot_s": 2330.8877477930014,
+      "allvar_s": 3575.356704375,
+      "naive_mb": 412.224768,
+      "skelot_mb": 51.247488,
+      "allvar_mb": 60.956464
+    },
+    {
+      "bucket": "huge",
+      "families": 161,
+      "members": 4863,
+      "naive_s": 222925.81485271314,
+      "skelot_s": 7536.926545792999,
+      "allvar_s": 8325.733926735998,
+      "naive_mb": 2531.757104,
+      "skelot_mb": 73.009048,
+      "allvar_mb": 87.10468
+    }
+  ],
+  "total": {
+    "families": 817,
+    "members": 9910,
+    "naive_s": 248239.10118420015,
+    "skelot_s": 10385.306277871,
+    "allvar_s": 12690.776256223999,
+    "naive_mb": 3039.977888,
+    "skelot_mb": 141.419968,
+    "allvar_mb": 168.82164
+  },
+  "corpus_wall": {
+    "naive_s": 27758.294369163,
+    "skelot_s": 12701.470811099
+  }
+}

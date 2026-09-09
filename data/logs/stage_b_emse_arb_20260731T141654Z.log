@@ -1,0 +1,10 @@
+  corpus filter: 1389 code entries excluded (0xEF prefix / empty)
+Collected 2895 compilable bytecodes
+  [per-hash 50] 389.2s
+  [per-hash 100] 654.2s
+  [per-hash 150] 1034.9s
+  [per-hash 200] 1257.4s
+  [per-hash 250] 1530.3s
+  [per-hash 300] 1753.7s
+  [per-hash 350] 1924.9s
+  [per-hash 400] 2098.9s

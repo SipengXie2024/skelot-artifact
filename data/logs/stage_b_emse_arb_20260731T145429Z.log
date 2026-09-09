@@ -1,0 +1,70 @@
+  corpus filter: 1389 code entries excluded (0xEF prefix / empty)
+Collected 2895 compilable bytecodes
+  [per-hash 50] 410.0s
+  [per-hash 100] 660.8s
+  [per-hash 150] 1004.4s
+  [per-hash 200] 1229.2s
+  [per-hash 250] 1491.4s
+  [per-hash 300] 1714.7s
+  [per-hash 350] 1905.3s
+  [per-hash 400] 2089.4s
+  [per-hash 450] 2260.2s
+  [per-hash 500] 2422.3s
+  [per-hash 550] 2561.4s
+  [per-hash 600] 2695.6s
+  [per-hash 650] 2807.8s
+  [per-hash 700] 2913.4s
+  [per-hash 750] 2993.1s
+  [per-hash 800] 3066.7s
+  [per-hash 850] 3135.8s
+  [per-hash 900] 3200.7s
+  [per-hash 950] 3246.7s
+  [per-hash 1000] 3279.6s
+  [per-hash 1050] 3298.9s
+  [per-hash 1100] 3335.8s
+  [per-hash 1150] 3367.6s
+  [per-hash 1200] 3427.1s
+  [per-hash 1250] 3473.5s
+  [per-hash 1300] 3500.4s
+  [per-hash 1350] 3526.4s
+  [per-hash 1400] 3565.3s
+  [per-hash 1450] 3592.9s
+  [per-hash 1500] 3646.7s
+  [per-hash 1550] 3700.3s
+  [per-hash 1600] 3746.1s
+  [per-hash 1650] 3785.4s
+  [per-hash 1700] 3819.8s
+  [per-hash 1750] 3844.3s
+  [per-hash 1800] 3861.7s
+  [per-hash 1850] 3892.1s
+  [per-hash 1900] 3917.5s
+  [per-hash 1950] 3939.7s
+  [per-hash 2000] 3955.5s
+  [per-hash 2050] 3967.1s
+  [per-hash 2100] 3979.2s
+  [per-hash 2150] 3992.4s
+  [per-hash 2200] 3997.7s
+  [per-hash 2250] 4018.4s
+  [per-hash 2300] 4037.2s
+  [per-hash 2350] 4055.9s
+  [per-hash 2400] 4073.3s
+  [per-hash 2450] 4180.5s
+  [per-hash 2500] 4259.0s
+  [per-hash 2550] 4310.0s
+  [per-hash 2600] 4329.5s
+  [per-hash 2650] 4402.5s
+  [per-hash 2700] 4443.4s
+  [per-hash 2750] 4458.4s
+  [per-hash 2800] 4490.0s
+  [per-hash 2850] 4636.9s
+  wrote /home/ubuntu/sipeng/skelot-paper/data/compile_bench_emse_arb.json (1 records)
+  skeleton groups (emse): 171 families, 2056 per-hash units
+  admission: g1 rejected 2 skeletons (4 members), g2 rejected 0 members, 0 collision groups split
+  [skelot family 50] 51.2s
+  [skelot family 100] 122.1s
+  [skelot family 150] 244.5s
+  [skelot singleton 500] 949.9s
+  [skelot singleton 1000] 1623.7s
+  [skelot singleton 1500] 2321.2s
+  [skelot singleton 2000] 3163.6s
+  wrote /home/ubuntu/sipeng/skelot-paper/data/compile_bench_emse_arb.json (2 records)

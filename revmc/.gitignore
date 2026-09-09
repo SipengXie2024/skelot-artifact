@@ -1,0 +1,23 @@
+/target
+clif
+.vscode
+.idea
+/tmp
+.omc/
+*AGENTS.md
+*.log.planning/
+.planning/
+.worktrees/
+/jit_cache/
+/jit_cache_pgo/
+/revmc_cache/
+# Local-only documentation and tooling state
+CLAUDE.md
+.claude/
+# Reproduction-script local config and outputs
+examples/runner/scripts/runtime_attribution/output/
+examples/runner/scripts/runtime_attribution/paths.env
+__pycache__/
+# Generated skeleton registry data (200+ MB). Unanchored suffix on purpose:
+# `...bin.pre-degradation-filter` slipped past a `*.bin` pattern once already.
+skeleton_registry_full*

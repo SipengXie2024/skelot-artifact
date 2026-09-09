@@ -1,0 +1,109 @@
+{
+  "created_utc": "2026-05-13",
+  "purpose": "Record methodology, conclusion, and measured data for SkelOT versus Naive AOT frontend attribution.",
+  "environment": {
+    "perf_version": "6.17.13",
+    "kernel": "6.17.0-1013-aws",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+    "pmu_name": "sapphire_rapids",
+    "virtualization": "KVM",
+    "perf_event_paranoid_restored_to": 4
+  },
+  "source_paths": {
+    "tma_l1_summary": "/home/ubuntu/sipeng/skelot/revmc/examples/runner/scripts/runtime_attribution/output/perf_p1_summary.json",
+    "tma_l23_probe_summary": "/home/ubuntu/sipeng/skelot/revmc/examples/runner/scripts/runtime_attribution/output/tma_l23_probe/perf_p1_summary.json",
+    "tma_l23_probe_raw_dir": "/home/ubuntu/sipeng/skelot/revmc/examples/runner/scripts/runtime_attribution/output/tma_l23_probe",
+    "benchmark": "/home/ubuntu/sipeng/skelot/revmc/examples/runner/src/bin/skeleton_vs_perhash_bench.rs",
+    "parser": "/home/ubuntu/sipeng/skelot/revmc/examples/runner/scripts/runtime_attribution/parse_perf_p1.py"
+  },
+  "direct_tma_l2_l3_attempt": {
+    "status": "failed_on_this_host",
+    "commands": [
+      "perf stat -M tma_L2_group sleep 0.1",
+      "perf stat -M tma_L3_group sleep 0.1",
+      "perf stat --topdown --td-level 2 sleep 0.1",
+      "perf stat --topdown --td-level 3 sleep 0.1"
+    ],
+    "failure": "perf could not resolve topdown-retiring/topdown-fetch-lat pseudo events.",
+    "observed_errors": [
+      "Unable to find PMU or event on a PMU of 'topdown-retiring'",
+      "Unable to find event on a PMU of 'topdown-fetch-lat'"
+    ],
+    "reasoning": "perf_event_paranoid=-1 enabled PMU access, but sysfs did not expose the required topdown pseudo-event aliases. A raw r20a4 probe returned zero on the real benchmark and was rejected as a usable fetch-latency slot event."
+  },
+  "tma_l1_additive_slots": {
+    "n_runs": 6,
+    "tags": ["r1", "r2", "r3", "r4", "r5", "r6"],
+    "unit": "slots_per_call",
+    "delta_topdown_slots": -8136.458247480616,
+    "delta_frontend_bound_slots": -8149.717757464508,
+    "delta_backend_bound_slots": 165.00964297755945,
+    "delta_bad_spec_slots": -141.41492526130446,
+    "delta_retiring_slots": -10.335207732364324,
+    "delta_sum_retiring_bad_spec_backend_frontend": -8136.4582474806175,
+    "additive_residual_slots": 1.8189894035458565e-12,
+    "conclusion": "The additive top-level TMA slot reduction is localized almost entirely to frontend-bound slots. Backend-bound slots increase and are an offset, not a saving slice."
+  },
+  "tma_l2_frontend_bandwidth_proxy": {
+    "event_set": "tma_l2_bw",
+    "n_runs": 3,
+    "tags": ["r1", "r2", "r3"],
+    "events": [
+      "idq.dsb_cycles_any",
+      "idq.dsb_cycles_ok",
+      "idq.mite_cycles_any",
+      "idq.mite_cycles_ok"
+    ],
+    "derived": {
+      "idq_dsb_limited_cycles": "idq.dsb_cycles_any - idq.dsb_cycles_ok",
+      "idq_mite_limited_cycles": "idq.mite_cycles_any - idq.mite_cycles_ok"
+    },
+    "unit": "cycles_per_call",
+    "delta_cyc": -1134.240027972377,
+    "delta_idq_dsb_cycles_any": -14.223764033017403,
+    "delta_idq_dsb_cycles_ok": -10.302316462493295,
+    "delta_idq_mite_cycles_any": -3.8543962836697574,
+    "delta_idq_mite_cycles_ok": -3.1254211466177253,
+    "delta_idq_dsb_limited_cycles": -3.9214475705241085,
+    "delta_idq_mite_limited_cycles": -0.7289751370519753,
+    "delta_idq_limited_cycles_total": -4.650422707576084,
+    "conclusion": "DSB/MITE frontend-bandwidth proxy movement is tiny and does not explain the frontend-bound saving."
+  },
+  "tma_l3_l4_instruction_fetch_proxy": {
+    "event_set": "tma_l3_fetch",
+    "n_runs": 3,
+    "tags": ["r1", "r2", "r3"],
+    "events": [
+      "icache_data.stalls",
+      "icache_tag.stalls",
+      "offcore_requests_outstanding.cycles_with_demand_code_rd",
+      "l2_rqsts.code_rd_miss"
+    ],
+    "delta_cyc": {
+      "value": -1231.0372831828572,
+      "unit": "cycles_per_call"
+    },
+    "delta_icache_data_stalls": {
+      "value": -1029.9706639693302,
+      "unit": "cycles_per_call"
+    },
+    "delta_icache_tag_stalls": {
+      "value": -252.54466714119803,
+      "unit": "cycles_per_call"
+    },
+    "delta_offcore_cycles_demand_code_rd": {
+      "value": 0.0,
+      "unit": "cycles_per_call"
+    },
+    "delta_l2_rqsts_code_rd_miss": {
+      "value": -19.164729829293577,
+      "unit": "misses_per_call"
+    },
+    "conclusion": "The lower-level mechanism evidence points to instruction-fetch latency / L1I footprint. Offcore demand-code cycles are zero, so the measured effect is not a DRAM/offcore code-fetch story."
+  },
+  "figure_guidance": {
+    "do_not_use": "Strict pie chart for lower-level frontend evidence.",
+    "recommended": "Use additive TMA-L1 slot delta bars plus lower-level evidence bars.",
+    "safe_claim": "TMA-L1 localizes the saving to frontend-bound slots; lower-level counters identify the mechanism as instruction-fetch latency / L1I footprint, not DSB/MITE bandwidth or backend execution."
+  }
+}

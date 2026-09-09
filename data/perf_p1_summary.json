@@ -1,0 +1,206 @@
+{
+  "frontend": {
+    "event_order": [
+      "cycles",
+      "instructions",
+      "icache_data_stalls",
+      "icache_tag_stalls",
+      "dsb2mite_penalty_cycles",
+      "cycle_activity_stalls_total"
+    ],
+    "tags": [
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "n_runs": 3,
+    "n_contracts_in_both_modes": 330,
+    "per_hash_totals": {
+      "calls": 400395,
+      "cycles": 2124836949,
+      "instructions": 2138338124,
+      "e2": 761221367,
+      "e3": 232159621,
+      "e4": 36851743,
+      "e5": 1366794573,
+      "wall_ns": 5442356739
+    },
+    "skeleton_totals": {
+      "calls": 400395,
+      "cycles": 1727797488,
+      "instructions": 2133495770,
+      "e2": 421260514,
+      "e3": 150931595,
+      "e4": 38238577,
+      "e5": 981629866,
+      "wall_ns": 5391461351
+    },
+    "global_per_call": {
+      "ph_cyc": 5306.851856291912,
+      "sk_cyc": 4315.232427977372,
+      "delta_cyc_sk_minus_ph": -991.6194283145396,
+      "ratio_cyc_sk_over_ph": 0.8131435632334724,
+      "ph_icache_data_stalls": 1901.1760061938835,
+      "sk_icache_data_stalls": 1052.1123240799711,
+      "delta_icache_data_stalls_sk_minus_ph": -849.0636821139124,
+      "ph_icache_tag_stalls": 579.8264738570662,
+      "sk_icache_tag_stalls": 376.95674271656736,
+      "delta_icache_tag_stalls_sk_minus_ph": -202.8697311404988,
+      "ph_dsb2mite_penalty_cycles": 92.03846951135753,
+      "sk_dsb2mite_penalty_cycles": 95.50213414253425,
+      "delta_dsb2mite_penalty_cycles_sk_minus_ph": 3.4636646311767123,
+      "ph_cycle_activity_stalls_total": 3413.6154872063835,
+      "sk_cycle_activity_stalls_total": 2451.653657013699,
+      "delta_cycle_activity_stalls_total_sk_minus_ph": -961.9618301926844
+    },
+    "accounting": {
+      "delta_cyc": -991.6194283145396,
+      "delta_icache_data_stalls": -849.0636821139124,
+      "delta_icache_tag_stalls": -202.8697311404988,
+      "delta_dsb2mite_penalty_cycles": 3.4636646311767123,
+      "delta_stalls_total_backend": -961.9618301926844,
+      "delta_frontend_attributed": -1055.3970778855878,
+      "frontend_share_of_cyc_delta": 1.0643166599503313,
+      "interpretation": "If skelot reduces cycles (delta_cyc < 0), and the icache stall reductions are themselves negative (skelot has fewer stalls), then frontend_share captures what % of the cycle savings is in icache_data + icache_tag stalls (minus the dsb2mite penalty if it grew)."
+    }
+  },
+  "backend": {
+    "event_order": [
+      "cycles",
+      "instructions",
+      "cycle_activity_stalls_total",
+      "cycle_activity_stalls_l1d_miss",
+      "idq_dsb_uops",
+      "idq_mite_uops"
+    ],
+    "tags": [
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "n_runs": 3,
+    "n_contracts_in_both_modes": 330,
+    "per_hash_totals": {
+      "calls": 400395,
+      "cycles": 2043447193,
+      "instructions": 2138101306,
+      "e2": 1283954915,
+      "e3": 252918278,
+      "e4": 409827995,
+      "e5": 2051647134,
+      "wall_ns": 5142013463
+    },
+    "skeleton_totals": {
+      "calls": 400395,
+      "cycles": 1643435885,
+      "instructions": 2133474083,
+      "e2": 904619613,
+      "e3": 197577909,
+      "e4": 396195515,
+      "e5": 2026053973,
+      "wall_ns": 5037071711
+    },
+    "global_per_call": {
+      "ph_cyc": 5103.5781990284595,
+      "sk_cyc": 4104.536482723311,
+      "delta_cyc_sk_minus_ph": -999.0417163051488,
+      "ratio_cyc_sk_over_ph": 0.8042468093277515,
+      "ph_cycle_activity_stalls_total": 3206.7206508572785,
+      "sk_cycle_activity_stalls_total": 2259.3179560184317,
+      "delta_cycle_activity_stalls_total_sk_minus_ph": -947.4026948388469,
+      "ph_cycle_activity_stalls_l1d_miss": 631.6719189800073,
+      "sk_cycle_activity_stalls_l1d_miss": 493.4574832353051,
+      "delta_cycle_activity_stalls_l1d_miss_sk_minus_ph": -138.21443574470214,
+      "ph_idq_dsb_uops": 1023.5592227675171,
+      "sk_idq_dsb_uops": 989.5116447508086,
+      "delta_idq_dsb_uops_sk_minus_ph": -34.047578016708485,
+      "ph_idq_mite_uops": 5124.057827894953,
+      "sk_idq_mite_uops": 5060.138046179398,
+      "delta_idq_mite_uops_sk_minus_ph": -63.91978171555547
+    },
+    "accounting": {
+      "delta_cyc": -999.0417163051488,
+      "delta_stalls_total": -947.4026948388469,
+      "delta_stalls_l1d_miss": -138.21443574470214,
+      "delta_idq_dsb_uops": -34.047578016708485,
+      "delta_idq_mite_uops": -63.91978171555547,
+      "ph_dsb_hit_rate_pct": 16.64969067416484,
+      "sk_dsb_hit_rate_pct": 16.3565114560982,
+      "backend_stall_share_of_cyc_delta": 0.948311446235415
+    }
+  },
+  "tma_l1": {
+    "event_order": [
+      "cycles",
+      "instructions",
+      "topdown_slots",
+      "uops_retired_slots",
+      "topdown_bad_spec_slots",
+      "topdown_backend_bound_slots"
+    ],
+    "tags": [
+      "r1",
+      "r2",
+      "r3",
+      "r4",
+      "r5",
+      "r6"
+    ],
+    "n_runs": 6,
+    "n_contracts_in_both_modes": 330,
+    "per_hash_totals": {
+      "calls": 800790,
+      "cycles": 4398116306,
+      "instructions": 4277565480,
+      "e2": 26218050450,
+      "e3": 4298926691,
+      "e4": 1496179245,
+      "e5": 2795568114,
+      "wall_ns": 10496725840
+    },
+    "skeleton_totals": {
+      "calls": 800790,
+      "cycles": 3304875927,
+      "instructions": 4268048542,
+      "e2": 19702456050,
+      "e3": 4290650360,
+      "e4": 1382935587,
+      "e5": 2927706186,
+      "wall_ns": 10257602960
+    },
+    "global_per_call": {
+      "ph_cyc": 5492.221813459209,
+      "sk_cyc": 4127.019477016446,
+      "delta_cyc_sk_minus_ph": -1365.2023364427632,
+      "ratio_cyc_sk_over_ph": 0.7514298615731059,
+      "ph_topdown_slots": 32740.232083317725,
+      "sk_topdown_slots": 24603.77383583711,
+      "delta_topdown_slots_sk_minus_ph": -8136.458247480616,
+      "ph_uops_retired_slots": 5368.357111102786,
+      "sk_uops_retired_slots": 5358.021903370422,
+      "delta_uops_retired_slots_sk_minus_ph": -10.335207732364324,
+      "ph_topdown_bad_spec_slots": 1868.3790319559434,
+      "sk_topdown_bad_spec_slots": 1726.964106694639,
+      "delta_topdown_bad_spec_slots_sk_minus_ph": -141.41492526130446,
+      "ph_topdown_backend_bound_slots": 3491.0127673922,
+      "sk_topdown_backend_bound_slots": 3656.0224103697597,
+      "delta_topdown_backend_bound_slots_sk_minus_ph": 165.00964297755945,
+      "ph_topdown_frontend_bound_slots": 22012.483172866796,
+      "sk_topdown_frontend_bound_slots": 13862.765415402288,
+      "delta_topdown_frontend_bound_slots_sk_minus_ph": -8149.717757464508
+    },
+    "accounting": {
+      "delta_cyc": -1365.2023364427632,
+      "delta_topdown_slots": -8136.458247480616,
+      "delta_retiring_slots": -10.335207732364324,
+      "delta_bad_spec_slots": -141.41492526130446,
+      "delta_backend_bound_slots": 165.00964297755945,
+      "delta_frontend_bound_slots": -8149.717757464508,
+      "delta_sum_retiring_bad_spec_backend_frontend": -8136.4582474806175,
+      "additive_residual_slots": 1.8189894035458565e-12,
+      "frontend_bound_share_of_slot_delta": 1.0016296414951797,
+      "backend_bound_share_of_slot_delta": -0.020280278956590635,
+      "interpretation": "Top-level TMA slot accounting is additive: frontend_bound is inferred as slots - retiring - bad_spec - backend_bound. This is orthogonal slot accounting, not a causal decomposition of all code-generation mechanisms."
+    }
+  }
+}

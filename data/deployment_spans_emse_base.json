@@ -1,0 +1,830 @@
+{
+  "chain": "base",
+  "rpc_url_kind": "alchemy_base",
+  "skeleton_mode": "emse",
+  "seed": 42,
+  "top_n": 5,
+  "sample_per_group": 30,
+  "families": [
+    {
+      "rank": 1,
+      "skeleton_hash": "0x36b808f28ee440b",
+      "family_size_in_corpus": 3323,
+      "members_attempted": 30,
+      "members_resolved": 30,
+      "deployments": [
+        {
+          "address": "0x48413707b70355597404018e7c603b261fcadf3f",
+          "first_block": 5484822,
+          "ts_unix": 1697758991
+        },
+        {
+          "address": "0x7ec18abf80e865c6799069df91073335935c4185",
+          "first_block": 12470964,
+          "ts_unix": 1711731275
+        },
+        {
+          "address": "0xe22a2dfaaaaec8a7b2b7acb4909eaaa5c5bd6e64",
+          "first_block": 13375411,
+          "ts_unix": 1713540169
+        },
+        {
+          "address": "0x8f8184bb6d3817910bc2ef91a393d2fe3ca8d774",
+          "first_block": 15216258,
+          "ts_unix": 1717221863
+        },
+        {
+          "address": "0x6c9d3aad8a72100aebad7b1c510e6e9996eefaf9",
+          "first_block": 22388688,
+          "ts_unix": 1731566723
+        },
+        {
+          "address": "0xd3ae7dfbf7832f8a18dc45dec7ae9409439abc99",
+          "first_block": 22573951,
+          "ts_unix": 1731937249
+        },
+        {
+          "address": "0x516100d5404f9a25545b8daa055e59a15bad9b10",
+          "first_block": 23115063,
+          "ts_unix": 1733019473
+        },
+        {
+          "address": "0xc34123709d6ef48b49e76bde0a679cfdaad03f5c",
+          "first_block": 23452173,
+          "ts_unix": 1733693693
+        },
+        {
+          "address": "0xbb7cd20386764d33d5167df104199e2c77a5c4a8",
+          "first_block": 23856592,
+          "ts_unix": 1734502531
+        },
+        {
+          "address": "0xfdccd04ddca9ecf052e8e9ef6bd09a9b323fbf49",
+          "first_block": 26262960,
+          "ts_unix": 1739315267
+        },
+        {
+          "address": "0x936c66b0d4df05b4db3ccf882d219c3829531acf",
+          "first_block": 26908927,
+          "ts_unix": 1740607201
+        },
+        {
+          "address": "0xbf7e7556ac55c5f6ad5d3468fe0930b625521c39",
+          "first_block": 30872982,
+          "ts_unix": 1748535311
+        },
+        {
+          "address": "0x9a0aa6bafdae764975eed847e2726086ccab841c",
+          "first_block": 31896711,
+          "ts_unix": 1750582769
+        },
+        {
+          "address": "0xb31ec00aebd56273254fc3942924d4ab4ef7082e",
+          "first_block": 32050860,
+          "ts_unix": 1750891067
+        },
+        {
+          "address": "0x296303a60f6cb2587f768036a3ef457adad9c431",
+          "first_block": 33763221,
+          "ts_unix": 1754315789
+        },
+        {
+          "address": "0x9a47679624f597975d65c84f57b9e7306b25d77f",
+          "first_block": 34173902,
+          "ts_unix": 1755137151
+        },
+        {
+          "address": "0x3e7931b43e955b6afcd800e25170dc9b89556ad8",
+          "first_block": 34446172,
+          "ts_unix": 1755681691
+        },
+        {
+          "address": "0xbbcd96b3be689ff6da417f334b1ec39dff7690a3",
+          "first_block": 34913198,
+          "ts_unix": 1756615743
+        },
+        {
+          "address": "0xe9060b4d4ab563663d15520fe1d5589fbcf6a1ac",
+          "first_block": 35084469,
+          "ts_unix": 1756958285
+        },
+        {
+          "address": "0x4c94d3016ece08a3d2a7995333e17457255e320c",
+          "first_block": 35620870,
+          "ts_unix": 1758031087
+        },
+        {
+          "address": "0x810474009f1227e4de38004f095cc3bd7ea82f73",
+          "first_block": 36513669,
+          "ts_unix": 1759816685
+        },
+        {
+          "address": "0xb860f454a093cfe903d84fc5b0f6d62f4d30f1f6",
+          "first_block": 36574869,
+          "ts_unix": 1759939085
+        },
+        {
+          "address": "0x1937130c059ca0809018962da40b783aae9358cf",
+          "first_block": 36592868,
+          "ts_unix": 1759975083
+        },
+        {
+          "address": "0x588c1d73083648d29a0d8f21598fa1a7f7ca2914",
+          "first_block": 36913044,
+          "ts_unix": 1760615435
+        },
+        {
+          "address": "0xfa012a3d8420c8fd29743e9d32aa8aab078ddbb6",
+          "first_block": 37003994,
+          "ts_unix": 1760797335
+        },
+        {
+          "address": "0xe3811bba2928465aaa2cc058707a08c368807712",
+          "first_block": 37289722,
+          "ts_unix": 1761368791
+        },
+        {
+          "address": "0x1d807bca5d545e174531f79f312141a1438589c7",
+          "first_block": 37546870,
+          "ts_unix": 1761883087
+        },
+        {
+          "address": "0xde7cc8cba7e346dd67fb7803ecca9ca38cd12076",
+          "first_block": 37647579,
+          "ts_unix": 1762084505
+        },
+        {
+          "address": "0x76d75fa7c5cdd86a3d0114f7ba983e1898aa25a6",
+          "first_block": 38003475,
+          "ts_unix": 1762796297
+        },
+        {
+          "address": "0x9a0f23c937afa9da28fe1745e27710671cd4e420",
+          "first_block": 38007974,
+          "ts_unix": 1762805295
+        }
+      ],
+      "span_days_min": 0.0,
+      "span_days_p5": 161.71625,
+      "span_days_median": 664.0990740740741,
+      "span_days_p95": 752.7465972222222,
+      "span_days_max": 752.8507407407408
+    },
+    {
+      "rank": 2,
+      "skeleton_hash": "0x8a30ab2d1822e59a",
+      "family_size_in_corpus": 465,
+      "members_attempted": 30,
+      "members_resolved": 30,
+      "deployments": [
+        {
+          "address": "0xa20eb729cd9a0753b479c95fbd60b4caa4e7eb07",
+          "first_block": 33717686,
+          "ts_unix": 1754224719
+        },
+        {
+          "address": "0xd6d9988536587581b89b34f8f72d95d4ef8aab07",
+          "first_block": 34021003,
+          "ts_unix": 1754831353
+        },
+        {
+          "address": "0xb202ceb6584433245fc449a88213d68b4db45b07",
+          "first_block": 35113159,
+          "ts_unix": 1757015665
+        },
+        {
+          "address": "0x8422da0113aed2698cd393b4c4f34bdfa8469b07",
+          "first_block": 35189764,
+          "ts_unix": 1757168875
+        },
+        {
+          "address": "0x42c7f0a3838f27226deb93283d69a281574abb07",
+          "first_block": 35896089,
+          "ts_unix": 1758581525
+        },
+        {
+          "address": "0x6c3d16e10d96a0fe60e3ea7bf427173b098e9b07",
+          "first_block": 37367743,
+          "ts_unix": 1761524833
+        },
+        {
+          "address": "0x36c7d74a2df5e65b7c2fe2d1a70e52da3df1bb07",
+          "first_block": 37540663,
+          "ts_unix": 1761870673
+        },
+        {
+          "address": "0xb2b34bd71f05445e40a23c1032e1730f4d693b07",
+          "first_block": 37565234,
+          "ts_unix": 1761919815
+        },
+        {
+          "address": "0x656654afe22c61431488fed2dbef6b988a6a8b07",
+          "first_block": 37573591,
+          "ts_unix": 1761936529
+        },
+        {
+          "address": "0x928b195dc5729aea8d7895e09c59b3e79fe17b07",
+          "first_block": 37798615,
+          "ts_unix": 1762386577
+        },
+        {
+          "address": "0xacd527eeb1ded2b73b1164b4395fb5c938b7fb07",
+          "first_block": 37890085,
+          "ts_unix": 1762569517
+        },
+        {
+          "address": "0xd513704590f4366a485eafb5ed9c74f6fc42bb07",
+          "first_block": 37940522,
+          "ts_unix": 1762670391
+        },
+        {
+          "address": "0xda6ac6b33f72fdaee9797ccc3c0beb64ad660b07",
+          "first_block": 37949230,
+          "ts_unix": 1762687807
+        },
+        {
+          "address": "0xccf0d7a911de594dcc3d008e22a7429200e49b07",
+          "first_block": 37953447,
+          "ts_unix": 1762696241
+        },
+        {
+          "address": "0xd4d2cf4615d754d79ab1635b633555dc94613b07",
+          "first_block": 37961609,
+          "ts_unix": 1762712565
+        },
+        {
+          "address": "0xb35636ffa635809e2d8569fd0a17a37130354b07",
+          "first_block": 37991749,
+          "ts_unix": 1762772845
+        },
+        {
+          "address": "0xc84f01d9c029bed023c502a305bc7d505a0a5b07",
+          "first_block": 38003384,
+          "ts_unix": 1762796115
+        },
+        {
+          "address": "0xdf2adf9b6d8e2afc7e0ba863ef6c9eb89074eb07",
+          "first_block": 38004653,
+          "ts_unix": 1762798653
+        },
+        {
+          "address": "0xaf9a344c41b0c15816d9165141c76a552b9d2b07",
+          "first_block": 38005228,
+          "ts_unix": 1762799803
+        },
+        {
+          "address": "0x089859a6507750a155909d0b9bd3c86fc5138b07",
+          "first_block": 38005330,
+          "ts_unix": 1762800007
+        },
+        {
+          "address": "0x0363fe3df03a66a991871117f0e6fda8c00ccb07",
+          "first_block": 38006137,
+          "ts_unix": 1762801621
+        },
+        {
+          "address": "0xd742d17972ec11cd2931d5deffaf388617daeb07",
+          "first_block": 38006640,
+          "ts_unix": 1762802627
+        },
+        {
+          "address": "0xafef9dfa92ccfd0999dc9fb80e357b6c1c20bb07",
+          "first_block": 38006772,
+          "ts_unix": 1762802891
+        },
+        {
+          "address": "0xe6579a5e33058af3460fada47e8dc90be3c5ab07",
+          "first_block": 38007486,
+          "ts_unix": 1762804319
+        },
+        {
+          "address": "0xffd28a7515130ba28770e05bb70aa14135452b07",
+          "first_block": 38007598,
+          "ts_unix": 1762804543
+        },
+        {
+          "address": "0x6084534e5582c0042af5e3442e2d91c87d94fb07",
+          "first_block": 38007670,
+          "ts_unix": 1762804687
+        },
+        {
+          "address": "0xc37460858806fc3e88079e13e057f1fc2e1b6b07",
+          "first_block": 38008430,
+          "ts_unix": 1762806207
+        },
+        {
+          "address": "0xdb9c5d78a3b1c395c551e4808a77280075b9fb07",
+          "first_block": 38008440,
+          "ts_unix": 1762806227
+        },
+        {
+          "address": "0x9964899ba62338af0d974595cfde03c90e1cfb07",
+          "first_block": 38011325,
+          "ts_unix": 1762811997
+        },
+        {
+          "address": "0x379d29015435f489e3c1f20ef47785443d0fcb07",
+          "first_block": 38013596,
+          "ts_unix": 1762816539
+        }
+      ],
+      "span_days_min": 0.0,
+      "span_days_p5": 7.021226851851852,
+      "span_days_median": 98.93664351851852,
+      "span_days_p95": 99.38979166666667,
+      "span_days_max": 99.44236111111111
+    },
+    {
+      "rank": 3,
+      "skeleton_hash": "0xf4b6d9b85bc90ba1",
+      "family_size_in_corpus": 402,
+      "members_attempted": 30,
+      "members_resolved": 30,
+      "deployments": [
+        {
+          "address": "0xd60d77825cc431720afc14fce5c2ca940b732783",
+          "first_block": 3687552,
+          "ts_unix": 1694164451
+        },
+        {
+          "address": "0xfb1ba038e1bc3b614fb38fc266411d38e0e39201",
+          "first_block": 15971844,
+          "ts_unix": 1718733035
+        },
+        {
+          "address": "0xbee435c7ff6cb814124281c4c2532476a094ac87",
+          "first_block": 16046335,
+          "ts_unix": 1718882017
+        },
+        {
+          "address": "0x07815d65f8ff6f404f78de764831b823e6275bd9",
+          "first_block": 16970611,
+          "ts_unix": 1720730569
+        },
+        {
+          "address": "0x54d281c7cc029a9dd71f9acb7487dd95b1eecf5a",
+          "first_block": 17119577,
+          "ts_unix": 1721028501
+        },
+        {
+          "address": "0x8912bd00a81b85d5618c1965f2a5ccdc034195b6",
+          "first_block": 19704052,
+          "ts_unix": 1726197451
+        },
+        {
+          "address": "0x26e263efdc91f0d3279e2ec2bd58a7ca5c2fce62",
+          "first_block": 19727985,
+          "ts_unix": 1726245317
+        },
+        {
+          "address": "0xa97c08bc49c246e583a3557f2922daa9e5d1b404",
+          "first_block": 19766912,
+          "ts_unix": 1726323171
+        },
+        {
+          "address": "0x618c8e779e7de6d1b13936cceecbc9002871642b",
+          "first_block": 22610490,
+          "ts_unix": 1732010327
+        },
+        {
+          "address": "0x1bf2fb259a19981da4430b830264c63a2b07dec9",
+          "first_block": 22719205,
+          "ts_unix": 1732227757
+        },
+        {
+          "address": "0x9f5a64d70957200afb4d38c2392b1fe927e77d15",
+          "first_block": 24962733,
+          "ts_unix": 1736714813
+        },
+        {
+          "address": "0x33513b1fdf53c5f992ad99e4cc2217c4201275be",
+          "first_block": 25626023,
+          "ts_unix": 1738041393
+        },
+        {
+          "address": "0x00a3bf207d9e5e3a0d838e0745653b28371012ed",
+          "first_block": 29253270,
+          "ts_unix": 1745295887
+        },
+        {
+          "address": "0x9cc8fba1159015e915e917f95967e55171eafaed",
+          "first_block": 31397710,
+          "ts_unix": 1749584767
+        },
+        {
+          "address": "0x2ac6517e04e37a12a92e48e2650d1cddbb7da03f",
+          "first_block": 32112925,
+          "ts_unix": 1751015197
+        },
+        {
+          "address": "0x629de285c6af476b16df6aec497cd5e3db49ef23",
+          "first_block": 34183341,
+          "ts_unix": 1755156029
+        },
+        {
+          "address": "0xd43b65439c65793ad4d65fc6717805c09ed640d9",
+          "first_block": 34522909,
+          "ts_unix": 1755835165
+        },
+        {
+          "address": "0x150d3a18fce9e18618f7db3029ae4efd12f9f453",
+          "first_block": 34527812,
+          "ts_unix": 1755844971
+        },
+        {
+          "address": "0x28d0393e2e259ebc102b460aa1ac16fae25fef94",
+          "first_block": 34661284,
+          "ts_unix": 1756111915
+        },
+        {
+          "address": "0x4e62a5b28dcfe66d466eb69adb26712833224145",
+          "first_block": 34676443,
+          "ts_unix": 1756142233
+        },
+        {
+          "address": "0x1d3cdc64fb302ba8486fb7174a8eb8d52783005d",
+          "first_block": 34997677,
+          "ts_unix": 1756784701
+        },
+        {
+          "address": "0x5e23f0db5b25b6c2929881af81af8755ef65a01f",
+          "first_block": 35298870,
+          "ts_unix": 1757387087
+        },
+        {
+          "address": "0x9fb7605ff82bb319b552efc097bc8f4efbb2acfa",
+          "first_block": 36415968,
+          "ts_unix": 1759621283
+        },
+        {
+          "address": "0xbd818f3849247a1524a00f143dffdcc9d8c0e678",
+          "first_block": 36589121,
+          "ts_unix": 1759967589
+        },
+        {
+          "address": "0x681f61253363f4ae44fb1e60e149877165cc957b",
+          "first_block": 37119789,
+          "ts_unix": 1761028925
+        },
+        {
+          "address": "0x2b8f7fa20ddf01216bc6342a8fcec224bf149b46",
+          "first_block": 37372439,
+          "ts_unix": 1761534225
+        },
+        {
+          "address": "0x2e28188eaee2a5f81654d61606312e25c5dfdeb2",
+          "first_block": 37417493,
+          "ts_unix": 1761624333
+        },
+        {
+          "address": "0xe2d0753ef5ccc53cd091464b51859e4226f86045",
+          "first_block": 37464907,
+          "ts_unix": 1761719161
+        },
+        {
+          "address": "0xb4585f61fdbeb7182839fd30dff9eb0e36a649cf",
+          "first_block": 37725358,
+          "ts_unix": 1762240063
+        },
+        {
+          "address": "0xf92f7c82298b9f62b8e636f7e51fad0235d69d56",
+          "first_block": 37771667,
+          "ts_unix": 1762332681
+        }
+      ],
+      "span_days_min": 0.0,
+      "span_days_p5": 284.3586111111111,
+      "span_days_median": 705.9210416666666,
+      "span_days_p95": 787.9121759259259,
+      "span_days_max": 788.9841435185185
+    },
+    {
+      "rank": 4,
+      "skeleton_hash": "0xf44a4732ed8ea6b3",
+      "family_size_in_corpus": 342,
+      "members_attempted": 30,
+      "members_resolved": 30,
+      "deployments": [
+        {
+          "address": "0xa450487d8c8f355611eff9553337be67261af26f",
+          "first_block": 3193183,
+          "ts_unix": 1693175713
+        },
+        {
+          "address": "0x69b69cc6e9f99c62a003fd9e143c126504d49dc2",
+          "first_block": 3663648,
+          "ts_unix": 1694116643
+        },
+        {
+          "address": "0xd82ae216189b9352c2268e392cb7afd35131d023",
+          "first_block": 12113345,
+          "ts_unix": 1711016037
+        },
+        {
+          "address": "0xa3a78774863c814cddcca2c22471607db9d0d90e",
+          "first_block": 13793767,
+          "ts_unix": 1714376881
+        },
+        {
+          "address": "0x787427ae4f24be661d107c4c61c629ccbaf3cb6f",
+          "first_block": 16752548,
+          "ts_unix": 1720294443
+        },
+        {
+          "address": "0x1129fb8d5eef56f0bb0d8e8b55a74619ce88d8fe",
+          "first_block": 25339429,
+          "ts_unix": 1737468205
+        },
+        {
+          "address": "0x5f3f5bf44a393e799bc62b7e7f0019b403f63ce2",
+          "first_block": 25580948,
+          "ts_unix": 1737951243
+        },
+        {
+          "address": "0xd03c97b668267f5f582cfc88d7826c5440610a7e",
+          "first_block": 25945419,
+          "ts_unix": 1738680185
+        },
+        {
+          "address": "0xe290816384416fb1db9225e176b716346db9f9fe",
+          "first_block": 26153389,
+          "ts_unix": 1739096125
+        },
+        {
+          "address": "0x7cf4b53411c1005a1b19d5fc00da15c67dc20ad8",
+          "first_block": 27399874,
+          "ts_unix": 1741589095
+        },
+        {
+          "address": "0x0eb0b7ae27477248829356ab7caa0b93fed76151",
+          "first_block": 29004920,
+          "ts_unix": 1744799187
+        },
+        {
+          "address": "0xfd70a9b4ce03dc07fe7ba5e4d39fac11ee8d8615",
+          "first_block": 30310654,
+          "ts_unix": 1747410655
+        },
+        {
+          "address": "0x564276b2d33be7b96f276458aa07376ebd80fc6a",
+          "first_block": 30898726,
+          "ts_unix": 1748586799
+        },
+        {
+          "address": "0x98556a54f25aa762ef7e9179450f7b749d11b9c9",
+          "first_block": 31873442,
+          "ts_unix": 1750536231
+        },
+        {
+          "address": "0x9ea220dc663ddd4c4906850aec6d120320a7c8d7",
+          "first_block": 31925591,
+          "ts_unix": 1750640529
+        },
+        {
+          "address": "0x53aec2d22648bff96baed2f204f2ef651f3c4a49",
+          "first_block": 32516897,
+          "ts_unix": 1751823141
+        },
+        {
+          "address": "0x0fd122a924c4528a78a8141bddd38a0e5ba35fa5",
+          "first_block": 33615860,
+          "ts_unix": 1754021067
+        },
+        {
+          "address": "0x1260f90e0b1c482b38b88f26dee17c57615d670b",
+          "first_block": 33642811,
+          "ts_unix": 1754074969
+        },
+        {
+          "address": "0xf4715a255587908c4736cde0d3ecefcc8d9bc708",
+          "first_block": 33865586,
+          "ts_unix": 1754520519
+        },
+        {
+          "address": "0x26d5f7a9d293f40946c052adf0ae7ebfdc827b4f",
+          "first_block": 34371413,
+          "ts_unix": 1755532173
+        },
+        {
+          "address": "0xd8d294714f5b1a1104cfe75c0bb4cef547a05124",
+          "first_block": 36344641,
+          "ts_unix": 1759478629
+        },
+        {
+          "address": "0xa39fff468e62ffffb3f60c37d50a24f0c35d3993",
+          "first_block": 36875918,
+          "ts_unix": 1760541183
+        },
+        {
+          "address": "0xaeace5c124e56ef48a25e0b1faa0ace917b9ed9c",
+          "first_block": 36967340,
+          "ts_unix": 1760724027
+        },
+        {
+          "address": "0xcd3248dbcd4b41b28d74090a3cdef8e8d2d72ace",
+          "first_block": 37483760,
+          "ts_unix": 1761756867
+        },
+        {
+          "address": "0xeee082cfff7359bfb5b9bda4dc5bddbf2b4e311e",
+          "first_block": 37738668,
+          "ts_unix": 1762266683
+        },
+        {
+          "address": "0xc2ff2e5aa9023b1bb688178a4a547212f4614bc0",
+          "first_block": 37877821,
+          "ts_unix": 1762544989
+        },
+        {
+          "address": "0xe3aae81d5075de89be6802d56514e29a6d833ee9",
+          "first_block": 37993908,
+          "ts_unix": 1762777163
+        },
+        {
+          "address": "0x61a0fc0c245e4f890903ac615462e2c6240b7788",
+          "first_block": 38000332,
+          "ts_unix": 1762790011
+        },
+        {
+          "address": "0xd977f0246332c3b1b1dd75d08e78771e97dc53be",
+          "first_block": 38003023,
+          "ts_unix": 1762795393
+        },
+        {
+          "address": "0xdec349d1296c1ea3ce800148f535a39a949f9012",
+          "first_block": 38005259,
+          "ts_unix": 1762799865
+        }
+      ],
+      "span_days_min": 0.0,
+      "span_days_p5": 10.890393518518518,
+      "span_days_median": 678.789675925926,
+      "span_days_p95": 805.7833333333333,
+      "span_days_max": 805.8350925925926
+    },
+    {
+      "rank": 5,
+      "skeleton_hash": "0xeecfd92afa643118",
+      "family_size_in_corpus": 212,
+      "members_attempted": 30,
+      "members_resolved": 30,
+      "deployments": [
+        {
+          "address": "0x91af203bbfa487963f1c714bba08ad8c70f8ec6e",
+          "first_block": 4475732,
+          "ts_unix": 1695740811
+        },
+        {
+          "address": "0x9d488ced5e1d46fa8440f9b69ee0956b49ac77fc",
+          "first_block": 17125311,
+          "ts_unix": 1721039969
+        },
+        {
+          "address": "0xc9efd84d745c27163af244d4b26672da8c595689",
+          "first_block": 17125311,
+          "ts_unix": 1721039969
+        },
+        {
+          "address": "0x5ad1f4731f209453c7db4747a3c3bc6f17508da9",
+          "first_block": 17125311,
+          "ts_unix": 1721039969
+        },
+        {
+          "address": "0x184784a50520b6587b0ae4e350a9fea692359c06",
+          "first_block": 17468892,
+          "ts_unix": 1721727131
+        },
+        {
+          "address": "0xdb67b4f4cd906cdd4dbbd7795d271676c0ca4f06",
+          "first_block": 19238309,
+          "ts_unix": 1725265965
+        },
+        {
+          "address": "0x47d6361a9ead139266edeaaab8e4fc904842ed46",
+          "first_block": 19412167,
+          "ts_unix": 1725613681
+        },
+        {
+          "address": "0x91f7a248d56501ac4bd1e4b82c9f516788a142ea",
+          "first_block": 20757673,
+          "ts_unix": 1728304693
+        },
+        {
+          "address": "0xf5bb4aa315a8875e64d0cdaf13d9e1595e066dee",
+          "first_block": 22441111,
+          "ts_unix": 1731671569
+        },
+        {
+          "address": "0x823d58a5f796a1a73611aca2131f57802ae9ec89",
+          "first_block": 22441111,
+          "ts_unix": 1731671569
+        },
+        {
+          "address": "0x281db38fdce0ac12f1ef32fc3115c08a40fba81d",
+          "first_block": 22751094,
+          "ts_unix": 1732291535
+        },
+        {
+          "address": "0x418425c9251c00347e9ec97f40c4dd6db1eca539",
+          "first_block": 22959557,
+          "ts_unix": 1732708461
+        },
+        {
+          "address": "0x803212dbfbf16cbc6fc4d6c8125598bdb043c8ed",
+          "first_block": 24214152,
+          "ts_unix": 1735217651
+        },
+        {
+          "address": "0x5da3327a9a42077c7711e9fdf6ec50490bd4f346",
+          "first_block": 24568503,
+          "ts_unix": 1735926353
+        },
+        {
+          "address": "0x0dc26f5eb59f74173f356d97596a98752956eec1",
+          "first_block": 25173202,
+          "ts_unix": 1737135751
+        },
+        {
+          "address": "0x568e1505e33d64f52a62ea7f04fa78db1b58d467",
+          "first_block": 25334985,
+          "ts_unix": 1737459317
+        },
+        {
+          "address": "0x298f4ff077db22e5b712312c243065aec3f511fe",
+          "first_block": 25334985,
+          "ts_unix": 1737459317
+        },
+        {
+          "address": "0xe6a04a4c753141f631408d3895e45b1618ddd272",
+          "first_block": 31169188,
+          "ts_unix": 1749127723
+        },
+        {
+          "address": "0x5da1ada9c3d42e3f34857433bb4a030ad7af81a5",
+          "first_block": 31209058,
+          "ts_unix": 1749207463
+        },
+        {
+          "address": "0xfd750557f144fe462d0789002d8d1f3baf76e85f",
+          "first_block": 32080776,
+          "ts_unix": 1750950899
+        },
+        {
+          "address": "0x7dd9787bf1c59e2b41ffb7d14f286709631e2473",
+          "first_block": 33238080,
+          "ts_unix": 1753265507
+        },
+        {
+          "address": "0x19c682d96ce36bce101f1e00bb00fd1a36daa180",
+          "first_block": 33335018,
+          "ts_unix": 1753459383
+        },
+        {
+          "address": "0x85b59952f21ad5b8eb6708b137f751030bd795bb",
+          "first_block": 34492154,
+          "ts_unix": 1755773655
+        },
+        {
+          "address": "0xcf8a51e5c0cd59430c95be4da1c376b12685d014",
+          "first_block": 35301018,
+          "ts_unix": 1757391383
+        },
+        {
+          "address": "0x3a73aba93936304d58cbcc5f151bc815625c954a",
+          "first_block": 35655389,
+          "ts_unix": 1758100125
+        },
+        {
+          "address": "0x8ee62d1216432bcb2e1010e4c5bb7614c9da3994",
+          "first_block": 36312003,
+          "ts_unix": 1759413353
+        },
+        {
+          "address": "0x3d714ea2334706a61632e7949ebaf6228f572222",
+          "first_block": 36518263,
+          "ts_unix": 1759825873
+        },
+        {
+          "address": "0xf60e8f1ac8e4efb299c3d06711fbc432c6ee6943",
+          "first_block": 37204844,
+          "ts_unix": 1761199035
+        },
+        {
+          "address": "0x4f064af041554c77e63a2b456d6f6a00d1cc58a6",
+          "first_block": 37419259,
+          "ts_unix": 1761627865
+        },
+        {
+          "address": "0xbc66df6753445e45401fe00ec77af5d7ed7ffebd",
+          "first_block": 37468614,
+          "ts_unix": 1761726575
+        }
+      ],
+      "span_days_min": 0.0,
+      "span_days_p5": 292.8143287037037,
+      "span_days_median": 482.8530787037037,
+      "span_days_p95": 762.5816435185185,
+      "span_days_max": 763.7241203703703
+    }
+  ]
+}

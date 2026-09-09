@@ -1,0 +1,15 @@
+Stage A: scanning 10000 blocks from 95897884 in 10 windows of 1000 (chain=bsc, skeleton_mode=emse)
+  [window 1/10] 5905 new bytecodes (2.2s)
+  [window 2/10] 1810 new bytecodes (11.1s)
+  [window 3/10] 1111 new bytecodes (14.0s)
+  [window 4/10] 832 new bytecodes (31.4s)
+  [window 5/10] 683 new bytecodes (33.1s)
+  [window 6/10] 592 new bytecodes (37.2s)
+  [window 7/10] 547 new bytecodes (48.6s)
+  [window 8/10] 447 new bytecodes (60.3s)
+  [window 9/10] 497 new bytecodes (71.1s)
+  [window 10/10] 400 new bytecodes (75.7s)
+wrote /home/ubuntu/hermes-shared-workspace/skelot-paper/data/bsc_10k_emse/dataset_scan.json
+wrote /home/ubuntu/hermes-shared-workspace/skelot-paper/data/bsc_10k_emse/skeleton_families.json
+wrote /home/ubuntu/hermes-shared-workspace/skelot-paper/data/bsc_10k_emse/skeleton_mapping.tsv
+Stage A done in 84.5s

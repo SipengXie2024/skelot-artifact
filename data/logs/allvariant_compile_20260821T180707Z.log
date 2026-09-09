@@ -1,0 +1,24 @@
+  corpus filter: 36430 code entries excluded (0xEF prefix / empty)
+Collected 19130 compilable bytecodes
+  skeleton groups (emse): 818 families, 9217 per-hash units
+  admission: g1 rejected 7 skeletons (17 members), g2 rejected 0 members, 0 collision groups split
+  skel 0ec92b5d1a2b3c7b: 3 members degraded to per-hash (variant PUSH feeds a static jump)
+  static-jump degradations: 1 families (3 members) -> per-hash
+  [skelot family 50] 252.4s
+  [skelot family 100] 403.3s
+  [skelot family 150] 494.6s
+  [skelot family 200] 567.0s
+  [skelot family 250] 620.4s
+  [skelot family 300] 656.3s
+  [skelot family 350] 684.4s
+  [skelot family 400] 699.0s
+  [skelot family 450] 719.3s
+  [skelot family 500] 732.8s
+  [skelot family 550] 739.4s
+  [skelot family 600] 756.2s
+  [skelot family 650] 783.7s
+  [skelot family 700] 828.0s
+  [skelot family 750] 881.8s
+  [skelot family 800] 1160.5s
+  WARN: resume skipped 9220 pre-existing units — they are EXCLUDED from timing records; totals are not a cold-compile measurement
+  wrote /home/ubuntu/sipeng/skelot-paper/data/compile_bench_emse_base_allvariant.json (1 records)

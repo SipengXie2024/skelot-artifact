@@ -1,0 +1,64 @@
+//! Pre-flight: confirm bench_data_*_v1/states/*.bin (BytecodeV86 schema) decodes
+//! via the BytecodeV86Mirror -> Bytecode path used by all xchain analyses.
+//!
+//! The corpora are multi-gigabyte downloads, so each test resolves its corpus
+//! from `$BENCH_ROOT` and reports success without asserting when the corpus is
+//! absent. Set `BENCH_ROOT` to the directory holding `bench_data_eth` and
+//! `bench_data_bsc` to exercise them.
+
+#[path = "../src/skelot_common.rs"]
+#[allow(dead_code)]
+mod skelot_common;
+
+use std::path::{Path, PathBuf};
+
+/// `$BENCH_ROOT/<corpus>` if both the variable and the directory are present.
+fn corpus(name: &str) -> Option<PathBuf> {
+    let root = std::env::var("BENCH_ROOT").ok()?;
+    let dir = Path::new(&root).join(name);
+    if dir.is_dir() {
+        Some(dir)
+    } else {
+        eprintln!("skipping: {} not found", dir.display());
+        None
+    }
+}
+
+#[test]
+fn eth_v1_state_decodes() {
+    let Some(dir) = corpus("bench_data_eth") else { return };
+    let path = dir.join("states/23000000.bin");
+    let snap = skelot_common::load_state_v1(&path).expect("decode eth v1");
+    assert_eq!(snap.block_number, 23_000_000);
+    assert!(!snap.codes.is_empty(), "expected >=1 code in eth v1 state");
+    let mut total = 0usize;
+    let mut eip7702 = 0usize;
+    skelot_common::iter_bytecode_raw(&snap, |_, _| total += 1);
+    for code in snap.codes.values() {
+        if matches!(code, skelot_common::BytecodeV86Mirror::Eip7702 { .. }) {
+            eip7702 += 1;
+        }
+    }
+    eprintln!("eth v1 23000000: {} entries ({} eip7702)", total, eip7702);
+}
+
+#[test]
+fn bsc_v1_state_decodes() {
+    let Some(dir) = corpus("bench_data_bsc") else { return };
+    let path = dir.join("states/95897884.bin");
+    let snap = skelot_common::load_state_v1(&path).expect("decode bsc v1");
+    assert_eq!(snap.block_number, 95_897_884);
+    assert!(!snap.codes.is_empty(), "expected >=1 code in bsc v1 state");
+}
+
+#[test]
+fn manifest_reports_v1_schema() {
+    if let Some(dir) = corpus("bench_data_eth") {
+        let m = skelot_common::read_bench_manifest(&dir).expect("eth manifest");
+        assert_eq!(m.schema_version, 1);
+    }
+    if let Some(dir) = corpus("bench_data_bsc") {
+        let m = skelot_common::read_bench_manifest(&dir).expect("bsc manifest");
+        assert_eq!(m.schema_version, 1);
+    }
+}

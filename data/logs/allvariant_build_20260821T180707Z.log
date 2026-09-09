@@ -1,0 +1,823 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.23
+   Compiling quote v1.0.44
+   Compiling libc v0.2.181
+   Compiling version_check v0.9.5
+   Compiling typenum v1.19.0
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.228
+   Compiling subtle v2.6.1
+   Compiling paste v1.0.15
+   Compiling const-oid v0.9.6
+   Compiling ruint-macro v1.2.1
+   Compiling unicode-segmentation v1.12.0
+   Compiling serde v1.0.228
+   Compiling unicode-xid v0.2.6
+   Compiling foldhash v0.2.0
+   Compiling once_cell v1.21.3
+   Compiling equivalent v1.0.2
+   Compiling winnow v0.7.14
+   Compiling hashbrown v0.16.1
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling rustversion v1.0.22
+   Compiling radium v0.7.0
+   Compiling zeroize v1.8.2
+   Compiling generic-array v0.14.9
+   Compiling convert_case v0.10.0
+   Compiling autocfg v1.5.0
+   Compiling siphasher v1.0.2
+   Compiling phf_shared v0.11.3
+   Compiling thiserror v2.0.18
+   Compiling base16ct v0.2.0
+   Compiling cpufeatures v0.2.17
+   Compiling find-msvc-tools v0.1.9
+   Compiling shlex v1.3.0
+   Compiling itoa v1.0.17
+   Compiling keccak v0.1.5
+   Compiling rustc-hash v2.1.1
+   Compiling indexmap v2.13.0
+   Compiling cc v1.2.55
+   Compiling num-traits v0.2.19
+   Compiling der v0.7.10
+   Compiling anyhow v1.0.101
+   Compiling bytes v1.11.1
+   Compiling zerocopy v0.8.39
+   Compiling tap v1.0.1
+   Compiling syn v2.0.115
+   Compiling wyz v0.5.1
+   Compiling const-hex v1.17.0
+   Compiling semver v1.0.27
+   Compiling regex-lite v0.1.9
+   Compiling lazy_static v1.5.0
+   Compiling funty v2.0.0
+   Compiling getrandom v0.2.17
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.6
+   Compiling num-integer v0.1.46
+   Compiling stable_deref_trait v1.2.1
+   Compiling eyre v0.6.12
+   Compiling rand_core v0.6.4
+   Compiling digest v0.10.7
+   Compiling crunchy v0.2.4
+   Compiling sec1 v0.7.3
+   Compiling toml_parser v1.0.7+spec-1.1.0
+   Compiling rand v0.8.5
+   Compiling ff v0.13.1
+   Compiling hmac v0.12.1
+   Compiling group v0.13.0
+   Compiling crypto-bigint v0.5.5
+   Compiling rfc6979 v0.4.0
+   Compiling signature v2.2.0
+   Compiling spki v0.7.3
+   Compiling sha2 v0.10.9
+   Compiling num-bigint v0.4.6
+   Compiling sha3 v0.10.8
+   Compiling ahash v0.8.12
+   Compiling arrayvec v0.7.6
+   Compiling toml_edit v0.23.10+spec-1.0.0
+   Compiling tiny-keccak v2.0.2
+   Compiling llvm-sys v211.0.0
+   Compiling allocator-api2 v0.2.21
+   Compiling inkwell v0.8.0
+   Compiling phf_generator v0.11.3
+   Compiling bitflags v2.10.0
+   Compiling either v1.15.0
+   Compiling writeable v0.6.3
+   Compiling litemap v0.8.2
+   Compiling num-iter v0.1.45
+   Compiling num-complex v0.4.6
+   Compiling indenter v0.3.4
+   Compiling icu_normalizer_data v2.2.0
+   Compiling icu_properties_data v2.2.0
+   Compiling utf8_iter v1.0.4
+   Compiling bitvec v1.0.1
+   Compiling hashbrown v0.15.5
+   Compiling ring v0.17.14
+   Compiling tracing-core v0.1.36
+   Compiling hex v0.4.3
+   Compiling pin-project-lite v0.2.16
+   Compiling proc-macro-crate v3.4.0
+   Compiling smallvec v1.15.1
+   Compiling arrayref v0.3.9
+   Compiling elliptic-curve v0.13.8
+   Compiling zmij v1.0.21
+   Compiling untrusted v0.9.0
+   Compiling crc32fast v1.5.0
+   Compiling num-rational v0.4.2
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v0.2.7
+   Compiling rustix v1.1.3
+   Compiling simd-adler32 v0.3.9
+   Compiling serde_json v1.0.149
+   Compiling ecdsa v0.16.9
+   Compiling percent-encoding v2.3.2
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling adler2 v2.0.1
+   Compiling getrandom v0.4.1
+   Compiling rustls v0.23.38
+   Compiling anstyle v1.0.13
+   Compiling colorchoice v1.0.4
+   Compiling anstyle-query v1.1.5
+   Compiling miniz_oxide v0.8.9
+   Compiling form_urlencoded v1.2.2
+   Compiling num v0.4.3
+   Compiling aurora-engine-modexp v1.2.0
+   Compiling anstream v0.6.21
+   Compiling k256 v0.13.4
+   Compiling linux-raw-sys v0.11.0
+   Compiling memchr v2.8.0
+   Compiling heck v0.5.0
+   Compiling clap_lex v1.0.0
+   Compiling log v0.4.29
+   Compiling libm v0.2.16
+   Compiling strsim v0.11.1
+   Compiling revmc-build v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc-build)
+   Compiling flate2 v1.1.9
+   Compiling perf-event-open-sys v6.0.0
+   Compiling base64 v0.22.1
+   Compiling fastrand v2.3.0
+   Compiling clap_builder v4.5.58
+   Compiling iana-time-zone v0.1.65
+   Compiling perf-event v0.4.9
+   Compiling chrono v0.4.43
+   Compiling libloading v0.8.9
+   Compiling hex-literal v0.4.1
+   Compiling synstructure v0.13.2
+   Compiling zeroize_derive v1.4.3
+   Compiling alloy-rlp-derive v0.3.13
+   Compiling serde_derive v1.0.228
+   Compiling derive_more-impl v2.1.1
+   Compiling num_enum_derive v0.7.5
+   Compiling phf_macros v0.11.3
+   Compiling thiserror-impl v2.0.18
+   Compiling auto_impl v1.3.0
+   Compiling zerofrom-derive v0.1.7
+   Compiling ppv-lite86 v0.2.21
+   Compiling async-trait v0.1.89
+   Compiling alloy-rlp v0.3.13
+   Compiling ruint v1.17.2
+   Compiling yoke-derive v0.8.2
+   Compiling rand_chacha v0.3.1
+   Compiling num_enum v0.7.5
+   Compiling enum-ordinalize-derive v4.3.2
+   Compiling zerofrom v0.1.7
+   Compiling zerovec-derive v0.11.3
+   Compiling ark-serialize-derive v0.5.0
+   Compiling displaydoc v0.2.5
+   Compiling phf v0.11.3
+   Compiling enum-ordinalize v4.3.2
+   Compiling tracing-attributes v0.1.31
+   Compiling educe v0.6.0
+   Compiling ark-ff-asm v0.5.0
+   Compiling pkcs8 v0.10.2
+   Compiling yoke v0.8.2
+   Compiling ark-std v0.5.0
+   Compiling ark-serialize v0.5.0
+   Compiling ark-ff-macros v0.5.0
+   Compiling inkwell_internals v0.13.0
+   Compiling zerotrie v0.2.4
+   Compiling ripemd v0.1.3
+   Compiling zerovec v0.11.6
+   Compiling revmc-backend v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc-backend)
+   Compiling rustls-pki-types v1.14.0
+   Compiling derive-where v1.6.0
+   Compiling delegate v0.13.5
+   Compiling clap_derive v4.5.55
+   Compiling tempfile v3.25.0
+   Compiling tracing v0.1.44
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling primeorder v0.13.6
+   Compiling icu_locale_core v2.2.0
+   Compiling icu_collections v2.2.0
+   Compiling webpki-roots v1.0.6
+   Compiling webpki-roots v0.26.11
+   Compiling p256 v0.13.2
+   Compiling derive_more v2.1.1
+   Compiling bincode v1.3.3
+   Compiling alloy-primitives v1.5.6
+   Compiling alloy-primitives v0.8.26
+   Compiling clap v4.5.58
+   Compiling itertools v0.13.0
+   Compiling icu_provider v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling icu_properties v2.2.0
+   Compiling revm-primitives v20.2.1 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling alloy-eip7702 v0.6.3
+   Compiling alloy-eip2930 v0.2.3
+   Compiling revm-bytecode v6.2.2 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revmc-llvm v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc-llvm)
+   Compiling revm-state v7.0.5 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revm-database-interface v7.0.5 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revm-context-interface v10.2.0 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling idna_adapter v1.2.1
+   Compiling idna v1.1.0
+   Compiling ark-ff v0.5.0
+   Compiling revm-interpreter v25.0.3 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling url v2.5.8
+   Compiling revmc-context v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc-context)
+   Compiling revmc-builtins v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc-builtins)
+   Compiling revmc v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/crates/revmc)
+warning: unused import: `I256_MIN`
+ --> crates/revmc/src/compiler/translate.rs:5:87
+  |
+5 |     Backend, Builder, Bytecode, EvmContext, Inst, InstData, InstFlags, IntCC, Result, I256_MIN,
+  |                                                                                       ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `I256_MIN` is never used
+  --> crates/revmc/src/lib.rs:62:7
+   |
+62 | const I256_MIN: U256 = U256::from_limbs([
+   |       ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `ADMISSION_DESCRIPTOR_VERSION` is never used
+ --> crates/revmc/src/skeleton_admission.rs:5:7
+  |
+5 | const ADMISSION_DESCRIPTOR_VERSION: u32 = 1;
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `AdmissionDescriptor` is never constructed
+ --> crates/revmc/src/skeleton_admission.rs:8:19
+  |
+8 | pub(crate) struct AdmissionDescriptor {
+  |                   ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `from_bytecode` and `validate` are never used
+  --> crates/revmc/src/skeleton_admission.rs:16:19
+   |
+15 | impl AdmissionDescriptor {
+   | ------------------------ associated items in this implementation
+16 |     pub(crate) fn from_bytecode(
+   |                   ^^^^^^^^^^^^^
+...
+52 |     pub(crate) fn validate(&self) -> Result<(), DescriptorError> {
+   |                   ^^^^^^^^
+
+warning: function `check_admission` is never used
+  --> crates/revmc/src/skeleton_admission.rs:83:15
+   |
+83 | pub(crate) fn check_admission(
+   |               ^^^^^^^^^^^^^^^
+
+warning: enum `AdmissionMismatch` is never used
+   --> crates/revmc/src/skeleton_admission.rs:127:17
+    |
+127 | pub(crate) enum AdmissionMismatch {
+    |                 ^^^^^^^^^^^^^^^^^
+
+warning: enum `DescriptorError` is never used
+   --> crates/revmc/src/skeleton_admission.rs:137:17
+    |
+137 | pub(crate) enum DescriptorError {
+    |                 ^^^^^^^^^^^^^^^
+
+warning: enum `AdmissionError` is never used
+   --> crates/revmc/src/skeleton_admission.rs:145:17
+    |
+145 | pub(crate) enum AdmissionError {
+    |                 ^^^^^^^^^^^^^^
+
+warning: missing documentation for an associated function
+  --> crates/revmc/src/profile.rs:14:5
+   |
+14 |     pub fn new() -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W missing-docs`
+
+   Compiling revm-database v7.0.5 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+warning: `revmc` (lib) generated 10 warnings (run `cargo fix --lib -p revmc` to apply 1 suggestion)
+   Compiling revmc-examples-runner v0.1.0 (/home/ubuntu/sipeng/skelot/revmc/examples/runner)
+   Compiling rustls-webpki v0.103.11
+   Compiling revm-context v9.1.0 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling ark-poly v0.5.0
+   Compiling ark-ec v0.5.0
+warning: `revmc` (lib) generated 10 warnings (10 duplicates)
+   Compiling ureq v2.12.1
+   Compiling ark-bls12-381 v0.5.0
+   Compiling ark-bn254 v0.5.0
+   Compiling revm-precompile v27.0.0 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revm-handler v10.0.1 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revm-inspector v10.0.1 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling revm v29.0.1 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+   Compiling op-revm v10.1.1 (https://github.com/SipengXie2024/skelot-revm?rev=db2ea6755d1d1b235843b7e9894160a0022f949b#db2ea675)
+warning: unused imports: `extract_emse_skeleton`, `hash_bytes`, and `strip_emse_suffixes`
+  --> examples/runner/src/bin/push_variance.rs:21:5
+   |
+21 |     extract_emse_skeleton, hash_bytes, iter_bytecode_raw, load_state_v1, should_skip_bytes,
+   |     ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+22 |     strip_emse_suffixes, ChainId,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `invariant_count` and `invariant_bytes` are never read
+   --> examples/runner/src/bin/push_variance.rs:112:9
+    |
+108 |     struct GroupStats {
+    |            ---------- fields in this struct
+...
+112 |         invariant_count: usize,
+    |         ^^^^^^^^^^^^^^^
+113 |         variant_count: usize,
+114 |         invariant_bytes: usize,
+    |         ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `revmc-examples-runner` (bin "push_variance") generated 2 warnings (run `cargo fix --bin "push_variance"` to apply 1 suggestion)
+warning: field `compiled` is never read
+  --> examples/runner/src/bin/../bench_common.rs:41:5
+   |
+37 | pub struct Fixture {
+   |            ------- field in this struct
+...
+41 |     compiled: CompiledContracts,
+   |     ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated items `from_db`, `run_plain`, and `run_jit` are never used
+   --> examples/runner/src/bin/../bench_common.rs:134:12
+    |
+ 45 | impl Fixture {
+    | ------------ associated items in this implementation
+...
+134 |     pub fn from_db(db: CacheDB<EmptyDB>, block: BlockEnv, tx: TxEnv) -> Result<Self, String> {
+    |            ^^^^^^^
+...
+151 |     pub fn run_plain(&self) -> Result<ResultAndState, String> {
+    |            ^^^^^^^^^
+...
+178 |     pub fn run_jit(&self) -> Result<ResultAndState, String> {
+    |            ^^^^^^^
+
+warning: method `make_plain_evm` is never used
+   --> examples/runner/src/bin/../bench_common.rs:242:8
+    |
+197 | impl Fixture {
+    | ------------ method in this implementation
+...
+242 |     fn make_plain_evm(&self) -> BenchEvm<'static> {
+    |        ^^^^^^^^^^^^^^
+
+warning: field `functions` is never read
+   --> examples/runner/src/bin/../bench_common.rs:553:5
+    |
+552 | struct CompiledContracts {
+    |        ----------------- field in this struct
+553 |     functions: Arc<HashMap<B256, RawEvmCompilerFn>>,
+    |     ^^^^^^^^^
+
+warning: unused imports: `EvmCompiler`, `EvmLlvmBackend`, and `OptimizationLevel`
+  --> examples/runner/src/bin/skeleton_bench.rs:38:13
+   |
+38 | use revmc::{EvmCompiler, EvmLlvmBackend, OptimizationLevel};
+   |             ^^^^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Deserialize` and `Serialize`
+  --> examples/runner/src/bin/skeleton_bench.rs:41:13
+   |
+41 | use serde::{Deserialize, Serialize};
+   |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> examples/runner/src/bin/../skeleton_bench_support.rs:5:5
+  |
+5 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ModeRecord`, `SkeletonCacheArtifacts`, and `registry_path`
+  --> examples/runner/src/bin/skeleton_bench.rs:79:71
+   |
+79 |     build_mode, OPT, compile_skeleton_to_cache, load_skeleton_cached, registry_path, save_registry,
+   |                                                                       ^^^^^^^^^^^^^
+80 |     skeleton_cache_artifacts, ExecSanity, ModeRecord, NoiseFloor, PairMatch, RegistryGroup,
+   |                                           ^^^^^^^^^^
+81 |     SkeletonCacheArtifacts, SkeletonRegistry,
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `revmc_context::RawEvmCompilerFn`
+  --> examples/runner/src/bin/skelot_ablation_bench.rs:19:5
+   |
+19 | use revmc_context::RawEvmCompilerFn;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `BinLoader` and `TxBin`
+  --> examples/runner/src/bin/skelot_ablation_bench.rs:23:28
+   |
+23 |     build_tx_index_cached, BinLoader, TxBin,
+   |                            ^^^^^^^^^  ^^^^^
+
+warning: unused variable: `db`
+   --> examples/runner/src/bin/gas_debug.rs:928:9
+    |
+928 |     let db = build_cache_db(&tx_rec, &code_values);
+    |         ^^ help: if this is intentional, prefix it with an underscore: `_db`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `line_type` is never read
+  --> examples/runner/src/bin/gas_debug.rs:85:5
+   |
+81 | struct CodeValuesLine {
+   |        -------------- field in this struct
+...
+85 |     line_type: String,
+   |     ^^^^^^^^^
+   |
+   = note: `CodeValuesLine` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::sync::Arc`
+  --> examples/runner/src/bin/icache_experiment.rs:15:5
+   |
+15 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `revmc_context::RawEvmCompilerFn`
+  --> examples/runner/src/bin/icache_experiment.rs:28:5
+   |
+28 | use revmc_context::RawEvmCompilerFn;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `opcode_count`
+   --> examples/runner/src/bin/opcode_dedup.rs:154:24
+    |
+154 |         let (skeleton, opcode_count, imm_count) = extract_opcode_skeleton(bytes);
+    |                        ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_opcode_count`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `revmc-examples-runner` (bin "opcode_dedup") generated 1 warning
+warning: `revmc-examples-runner` (bin "pgo_single_bench") generated 4 warnings
+warning: type alias `OpCtx` is never used
+  --> examples/runner/src/bin/../bin_common.rs:35:10
+   |
+35 | pub type OpCtx<DB> = op_revm::OpContext<DB>;
+   |          ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: type alias `BenchEvm` is never used
+  --> examples/runner/src/bin/../bin_common.rs:36:10
+   |
+36 | pub type BenchEvm = OpEvm<op_revm::OpContext<CacheDB<EmptyDB>>, ()>;
+   |          ^^^^^^^^
+
+warning: type alias `BenchError` is never used
+  --> examples/runner/src/bin/../bin_common.rs:37:10
+   |
+37 | pub type BenchError = EVMError<core::convert::Infallible, OpTransactionError>;
+   |          ^^^^^^^^^^
+
+warning: struct `JitDispatchStats` is never constructed
+  --> examples/runner/src/bin/../bin_common.rs:40:12
+   |
+40 | pub struct JitDispatchStats {
+   |            ^^^^^^^^^^^^^^^^
+
+warning: static `JIT_TOTAL_FRAMES` is never used
+  --> examples/runner/src/bin/../bin_common.rs:50:8
+   |
+50 | static JIT_TOTAL_FRAMES: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^^
+
+warning: static `JIT_LOOKUP_ATTEMPTS` is never used
+  --> examples/runner/src/bin/../bin_common.rs:51:8
+   |
+51 | static JIT_LOOKUP_ATTEMPTS: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^^^^^
+
+warning: static `JIT_LOOKUP_HITS` is never used
+  --> examples/runner/src/bin/../bin_common.rs:52:8
+   |
+52 | static JIT_LOOKUP_HITS: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^
+
+warning: static `JIT_LOOKUP_MISSES` is never used
+  --> examples/runner/src/bin/../bin_common.rs:53:8
+   |
+53 | static JIT_LOOKUP_MISSES: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^^^
+
+warning: static `JIT_SKIP_CREATE` is never used
+  --> examples/runner/src/bin/../bin_common.rs:54:8
+   |
+54 | static JIT_SKIP_CREATE: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^
+
+warning: static `JIT_SKIP_NO_BYTECODE_ADDRESS` is never used
+  --> examples/runner/src/bin/../bin_common.rs:55:8
+   |
+55 | static JIT_SKIP_NO_BYTECODE_ADDRESS: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: static `JIT_SKIP_EMPTY_BYTECODE` is never used
+  --> examples/runner/src/bin/../bin_common.rs:56:8
+   |
+56 | static JIT_SKIP_EMPTY_BYTECODE: AtomicU64 = AtomicU64::new(0);
+   |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: static `JIT_DISPATCH_STATS_ENABLED` is never used
+  --> examples/runner/src/bin/../bin_common.rs:57:8
+   |
+57 | static JIT_DISPATCH_STATS_ENABLED: AtomicBool = AtomicBool::new(false);
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `JitLookupDecision` is never used
+  --> examples/runner/src/bin/../bin_common.rs:60:6
+   |
+60 | enum JitLookupDecision {
+   |      ^^^^^^^^^^^^^^^^^
+
+warning: function `jit_lookup_decision` is never used
+  --> examples/runner/src/bin/../bin_common.rs:68:4
+   |
+68 | fn jit_lookup_decision(
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `reset_jit_dispatch_stats` is never used
+  --> examples/runner/src/bin/../bin_common.rs:87:8
+   |
+87 | pub fn reset_jit_dispatch_stats() {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `set_jit_dispatch_stats_enabled` is never used
+  --> examples/runner/src/bin/../bin_common.rs:97:8
+   |
+97 | pub fn set_jit_dispatch_stats_enabled(enabled: bool) {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `read_jit_dispatch_stats` is never used
+   --> examples/runner/src/bin/../bin_common.rs:101:8
+    |
+101 | pub fn read_jit_dispatch_stats() -> JitDispatchStats {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `OP_SPEC` is never used
+   --> examples/runner/src/bin/../bin_common.rs:115:11
+    |
+115 | pub const OP_SPEC: OpSpecId = OpSpecId::ISTHMUS;
+    |           ^^^^^^^
+
+warning: constant `ETH_SPEC` is never used
+   --> examples/runner/src/bin/../bin_common.rs:116:11
+    |
+116 | pub const ETH_SPEC: SpecId = OP_SPEC.into_eth_spec();
+    |           ^^^^^^^^
+
+warning: field `storage` is never read
+   --> examples/runner/src/bin/../bin_common.rs:123:9
+    |
+121 | pub struct AccountSnapshot {
+    |            --------------- field in this struct
+122 |     pub info: Option<AccountInfo>,
+123 |     pub storage: RevmHashMap<U256, U256>,
+    |         ^^^^^^^
+    |
+    = note: `AccountSnapshot` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: fields `block_number` and `codes` are never read
+   --> examples/runner/src/bin/../bin_common.rs:128:9
+    |
+127 | pub struct CacheSnapshot {
+    |            ------------- fields in this struct
+128 |     pub block_number: u64,
+    |         ^^^^^^^^^^^^
+...
+132 |     pub codes: RevmHashMap<B256, Bytecode>,
+    |         ^^^^^
+    |
+    = note: `CacheSnapshot` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: multiple fields are never read
+   --> examples/runner/src/bin/../bin_common.rs:145:9
+    |
+143 | pub struct TxBin {
+    |            ----- fields in this struct
+144 |     pub tx_type: u8,
+145 |     pub caller: [u8; 20],
+    |         ^^^^^^
+146 |     pub gas_limit: u64,
+147 |     pub gas_price: u128,
+    |         ^^^^^^^^^
+148 |     pub to: Option<[u8; 20]>,
+149 |     pub value: [u8; 32],
+    |         ^^^^^
+150 |     pub data: Vec<u8>,
+151 |     pub nonce: u64,
+    |         ^^^^^
+152 |     pub chain_id: Option<u64>,
+    |         ^^^^^^^^
+...
+159 |     pub source_hash: Option<[u8; 32]>,
+    |         ^^^^^^^^^^^
+160 |     pub mint: Option<[u8; 32]>,
+    |         ^^^^
+161 |     pub is_system_tx: bool,
+    |         ^^^^^^^^^^^^
+
+warning: method `to_tx_env` is never used
+   --> examples/runner/src/bin/../bin_common.rs:173:12
+    |
+172 | impl TxBin {
+    | ---------- method in this implementation
+173 |     pub fn to_tx_env(&self) -> TxEnv {
+    |            ^^^^^^^^^
+
+warning: struct `BinLoader` is never constructed
+   --> examples/runner/src/bin/../bin_common.rs:196:12
+    |
+196 | pub struct BinLoader {
+    |            ^^^^^^^^^
+
+warning: multiple associated items are never used
+   --> examples/runner/src/bin/../bin_common.rs:202:12
+    |
+201 | impl BinLoader {
+    | -------------- associated items in this implementation
+202 |     pub fn new(bench_dir: &Path, block_number: u64) -> Result<Self, String> {
+    |            ^^^
+...
+233 |     pub fn block_number(&self) -> u64 {
+    |            ^^^^^^^^^^^^
+...
+237 |     pub fn tx_count(&self) -> usize {
+    |            ^^^^^^^^
+...
+241 |     pub fn account_count(&self) -> usize {
+    |            ^^^^^^^^^^^^^
+...
+245 |     pub fn code_count(&self) -> usize {
+    |            ^^^^^^^^^^
+...
+249 |     pub fn raw_txs(&self) -> &[TxBin] {
+    |            ^^^^^^^
+...
+253 |     pub fn code_values(&self) -> &RevmHashMap<B256, Bytecode> {
+    |            ^^^^^^^^^^^
+...
+257 |     pub fn build_cache_db(&self) -> CacheDB<EmptyDB> {
+    |            ^^^^^^^^^^^^^^
+
+warning: function `build_op_cfg` is never used
+   --> examples/runner/src/bin/../bin_common.rs:280:8
+    |
+280 | pub fn build_op_cfg(chain_id: Option<u64>) -> CfgEnv<OpSpecId> {
+    |        ^^^^^^^^^^^^
+
+warning: function `build_op_tx` is never used
+   --> examples/runner/src/bin/../bin_common.rs:289:8
+    |
+289 | pub fn build_op_tx(tx: &TxBin) -> OpTransaction<TxEnv> {
+    |        ^^^^^^^^^^^
+
+warning: function `extract_gas` is never used
+   --> examples/runner/src/bin/../bin_common.rs:305:8
+    |
+305 | pub fn extract_gas(result: &ExecutionResult<OpHaltReason>) -> (bool, u64) {
+    |        ^^^^^^^^^^^
+
+warning: struct `NativeHandler` is never constructed
+   --> examples/runner/src/bin/../bin_common.rs:315:12
+    |
+315 | pub struct NativeHandler;
+    |            ^^^^^^^^^^^^^
+
+warning: struct `JitHandler` is never constructed
+   --> examples/runner/src/bin/../bin_common.rs:347:12
+    |
+347 | pub struct JitHandler {
+    |            ^^^^^^^^^^
+
+warning: function `run_jit_or_native` is never used
+   --> examples/runner/src/bin/../bin_common.rs:382:8
+    |
+382 | pub fn run_jit_or_native(
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `snapshot_before_tx` is never used
+   --> examples/runner/src/bin/../bin_common.rs:449:8
+    |
+449 | pub fn snapshot_before_tx(
+    |        ^^^^^^^^^^^^^^^^^^
+
+warning: function `single_tx_evm` is never used
+   --> examples/runner/src/bin/../bin_common.rs:487:8
+    |
+487 | pub fn single_tx_evm(
+    |        ^^^^^^^^^^^^^
+
+warning: struct `CompiledContracts` is never constructed
+   --> examples/runner/src/bin/../bin_common.rs:504:12
+    |
+504 | pub struct CompiledContracts {
+    |            ^^^^^^^^^^^^^^^^^
+
+warning: function `collect_unique_bytecodes` is never used
+   --> examples/runner/src/bin/../bin_common.rs:510:8
+    |
+510 | pub fn collect_unique_bytecodes(loaders: &[BinLoader]) -> HashMap<B256, Bytecode> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `should_skip_compilation` is never used
+   --> examples/runner/src/bin/../bin_common.rs:524:4
+    |
+524 | fn should_skip_compilation(bc: &Bytecode) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `compile_all_contracts` is never used
+   --> examples/runner/src/bin/../bin_common.rs:528:8
+    |
+528 | pub fn compile_all_contracts(code_values: &HashMap<B256, Bytecode>) -> CompiledContracts {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `make_evm` is never used
+   --> examples/runner/src/bin/../bin_common.rs:628:8
+    |
+628 | pub fn make_evm(loader: &BinLoader, chain_id: Option<u64>) -> BenchEvm {
+    |        ^^^^^^^^
+
+warning: function `make_evm_with_inspector` is never used
+   --> examples/runner/src/bin/../bin_common.rs:639:8
+    |
+639 | pub fn make_evm_with_inspector<I>(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `should_lookup_jit` is never used
+ --> examples/runner/src/bin/../jit_lookup.rs:5:8
+  |
+5 | pub fn should_lookup_jit(
+  |        ^^^^^^^^^^^^^^^^^
+
+warning: struct `CacheArtifacts` is never constructed
+  --> examples/runner/src/bin/../aot_cache.rs:15:8
+   |
+15 | struct CacheArtifacts {
+   |        ^^^^^^^^^^^^^^
+
+warning: function `cache_artifacts` is never used
+  --> examples/runner/src/bin/../aot_cache.rs:22:4
+   |
+22 | fn cache_artifacts(cache_dir: &Path, hash: &B256, opt: OptimizationLevel) -> CacheArtifacts {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `load_cached_symbol` is never used
+  --> examples/runner/src/bin/../aot_cache.rs:41:4
+   |
+41 | fn load_cached_symbol(
+   |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `compile_contract_to_cache` is never used
+  --> examples/runner/src/bin/../aot_cache.rs:53:4
+   |
+53 | fn compile_contract_to_cache(
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `compile_jit_fallback` is never used
+  --> examples/runner/src/bin/../aot_cache.rs:77:4
+   |
+77 | fn compile_jit_fallback(
+   |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `compile_all_contracts_with_cache` is never used
+  --> examples/runner/src/bin/../aot_cache.rs:91:8
+   |
+91 | pub fn compile_all_contracts_with_cache(
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `build_tx_index` is never used
+  --> examples/runner/src/bin/../tx_index.rs:15:8
+   |
+15 | pub fn build_tx_index(
+   |        ^^^^^^^^^^^^^^
+
+warning: function `build_tx_index_full` is never used
+  --> examples/runner/src/bin/../tx_index.rs:56:4
+   |
+56 | fn build_tx_index_full(
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `build_tx_index_cached` is never used
+  --> examples/runner/src/bin/../tx_index.rs:92:8
+   |
+92 | pub fn build_tx_index_cached(
+   |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `revmc-examples-runner` (bin "skeleton_bench") generated 4 warnings (run `cargo fix --bin "skeleton_bench"` to apply 4 suggestions)
+warning: `revmc-examples-runner` (bin "find_address") generated 49 warnings
+warning: `revmc-examples-runner` (bin "gas_debug") generated 2 warnings
+warning: `revmc-examples-runner` (bin "icache_experiment") generated 2 warnings (run `cargo fix --bin "icache_experiment"` to apply 2 suggestions)
+warning: `revmc-examples-runner` (bin "skelot_ablation_bench") generated 2 warnings (run `cargo fix --bin "skelot_ablation_bench"` to apply 2 suggestions)
+    Finished `release` profile [optimized + debuginfo] target(s) in 2m 11s

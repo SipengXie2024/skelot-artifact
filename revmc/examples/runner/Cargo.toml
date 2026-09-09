@@ -1,0 +1,101 @@
+[package]
+name = "revmc-examples-runner"
+publish = false
+
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[build-dependencies]
+revmc = { workspace = true, features = ["llvm-prefer-dynamic"] }
+revmc-build.workspace = true
+cc = "1.0"
+
+[dependencies]
+revmc-builtins = { workspace = true, default-features = false }
+revmc-context = { workspace = true, default-features = false }
+
+revm = { workspace = true, default-features = false, features = ["std", "serde"] }
+op-revm = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false, features = ["std"] }
+
+# Used by jsonl_bench / bin_bench binaries
+revmc = { workspace = true, features = ["llvm-prefer-dynamic"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+hex-literal = "0.4"
+libloading = "0.8"
+bincode = "1.3"
+clap = { version = "4", features = ["derive"] }
+k256 = "0.13"
+libm = "0.2"
+ureq = { version = "2", features = ["json"] }
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+tempfile = "3"
+perf-event = "0.4"
+perf-event-open-sys = "6"
+
+[dev-dependencies]
+criterion = "0.5"
+[[bin]]
+name = "push_variance"
+path = "src/bin/push_variance.rs"
+[[bin]]
+name = "skeleton_bench"
+path = "src/bin/skeleton_bench.rs"
+[[bin]]
+name = "skeleton_precompile"
+path = "src/bin/skeleton_precompile.rs"
+[[bin]]
+name = "skelot_compile_bench"
+path = "src/bin/skelot_compile_bench.rs"
+[[bin]]
+name = "skelot_dataset_scan"
+path = "src/bin/skelot_dataset_scan.rs"
+[[bin]]
+name = "skeleton_vs_perhash_bench"
+path = "src/bin/skeleton_vs_perhash_bench.rs"
+[[bin]]
+name = "skeleton_deployment_span"
+path = "src/bin/skeleton_deployment_span.rs"
+[[bin]]
+name = "nested_family_count"
+path = "src/bin/nested_family_count.rs"
+[[bin]]
+name = "grouping_stats"
+path = "src/bin/grouping_stats.rs"
+[[bin]]
+name = "skip_logic_conflicts"
+path = "src/bin/skip_logic_conflicts.rs"
+[[bin]]
+name = "jump_hit_attribution"
+path = "src/bin/jump_hit_attribution.rs"
+[[bin]]
+name = "addr_code_hash"
+path = "src/bin/addr_code_hash.rs"
+[[bin]]
+name = "hash_to_addr"
+path = "src/bin/hash_to_addr.rs"
+[[bin]]
+name = "snapshot_audit"
+path = "src/bin/snapshot_audit.rs"
+[[bin]]
+name = "replay_outcomes"
+path = "src/bin/replay_outcomes.rs"
+[[bin]]
+name = "hash_block_freq"
+path = "src/bin/hash_block_freq.rs"
+[[bin]]
+name = "load_reason_audit"
+path = "src/bin/load_reason_audit.rs"
+
+[[bin]]
+name = "inspect_registry"
+path = "src/bin/inspect_registry.rs"

@@ -1,0 +1,3480 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 86b4f7b1..962dc117 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,5 +1,5 @@
+ [workspace]
+-members = ["crates/*", "examples/*", "fuzz", "tests/state-tests"]
++members = ["crates/*", "examples/runner"]
+ default-members = ["crates/revmc-cli"]
+ resolver = "2"
+ 
+@@ -44,12 +44,12 @@ revmc-cranelift = { version = "0.1.0", path = "crates/revmc-cranelift", default-
+ revmc-llvm = { version = "0.1.0", path = "crates/revmc-llvm", default-features = false }
+ 
+ alloy-primitives = { version = "0.8", default-features = false }
+-revm = { version = "34.0", default-features = false }
+-revm-primitives = { version = "22.0", default-features = false }
+-revm-interpreter = { version = "32.0", default-features = false }
+-revm-bytecode = { version = "8.0", default-features = false, features = ["parse"] }
+-revm-context-interface = { version = "14.0", default-features = false }
+-revm-state = { version = "9.0", default-features = false }
++revm = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false }
++revm-primitives = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false }
++revm-interpreter = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false }
++revm-bytecode = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false, features = ["parse"] }
++revm-context-interface = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false }
++revm-state = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false }
+ ruint = { version = "1.12", default-features = false }
+ 
+ color-eyre = "0.6"
+diff --git a/crates/revmc-builtins/src/gas.rs b/crates/revmc-builtins/src/gas.rs
+index 18b284de..b7bbfeb2 100644
+--- a/crates/revmc-builtins/src/gas.rs
++++ b/crates/revmc-builtins/src/gas.rs
+@@ -17,9 +17,6 @@ macro_rules! tri {
+     };
+ }
+ 
+-/// Gas cost for SELFDESTRUCT operation.
+-pub const SELFDESTRUCT: i64 = SELFDESTRUCT_REFUND;
+-
+ /// Minimum gas required for callee.
+ pub const MIN_CALLEE_GAS: u64 = 2300;
+ 
+@@ -133,47 +130,60 @@ pub fn sstore_cost(
+ /// Calculate SSTORE refund.
+ #[inline]
+ pub fn sstore_refund(spec_id: SpecId, result: &SStoreResult) -> i64 {
+-    if spec_id.is_enabled_in(SpecId::BERLIN) {
+-        let mut refund = 0i64;
+-        if result.original_value != result.present_value
+-            && result.original_value == result.new_value
+-        {
+-            if result.original_value.is_zero() {
+-                refund += (SSTORE_SET - WARM_STORAGE_READ_COST) as i64;
+-            } else {
+-                refund += (WARM_SSTORE_RESET - WARM_STORAGE_READ_COST) as i64;
+-            }
+-        }
+-        if !result.present_value.is_zero() && result.new_value.is_zero() {
+-            refund += REFUND_SSTORE_CLEARS;
++    // EIP-2200 / EIP-3529 refund logic, matching revm GasParams::sstore_refund exactly.
++    if spec_id.is_enabled_in(SpecId::ISTANBUL) {
++        // EIP-3529: London reduced SSTORE clearing refund from 15000 to 4800
++        let sstore_clears_refund = if spec_id.is_enabled_in(SpecId::LONDON) {
++            (WARM_SSTORE_RESET + ACCESS_LIST_STORAGE_KEY) as i64 // 4800
++        } else {
++            REFUND_SSTORE_CLEARS // 15000
++        };
++
++        // Restore refund values depend on Berlin
++        let (set_refund, reset_refund) = if spec_id.is_enabled_in(SpecId::BERLIN) {
++            (
++                (SSTORE_SET - WARM_STORAGE_READ_COST) as i64,       // 19900
++                (WARM_SSTORE_RESET - WARM_STORAGE_READ_COST) as i64, // 2800
++            )
++        } else {
++            (
++                (SSTORE_SET - ISTANBUL_SLOAD_GAS) as i64,  // 19200
++                (SSTORE_RESET - ISTANBUL_SLOAD_GAS) as i64, // 4200
++            )
++        };
++
++        // No-op: new == present
++        if result.new_value == result.present_value {
++            return 0;
+         }
+-        if !result.original_value.is_zero()
+-            && result.present_value.is_zero()
+-            && result.new_value == result.original_value
+-        {
+-            refund -= REFUND_SSTORE_CLEARS;
++
++        // Clean store: original == present, setting to zero
++        if result.original_value == result.present_value && result.new_value.is_zero() {
++            return sstore_clears_refund;
+         }
+-        refund
+-    } else if spec_id.is_enabled_in(SpecId::ISTANBUL) {
++
+         let mut refund = 0i64;
+-        if result.original_value != result.present_value
+-            && result.original_value == result.new_value
+-        {
++
++        // Dirty store clearing/restoring refunds (only when original != 0)
++        if !result.original_value.is_zero() {
++            if result.present_value.is_zero() {
++                // Slot was cleared, now being restored — undo previous clearing refund
++                refund -= sstore_clears_refund;
++            } else if result.new_value.is_zero() {
++                // Slot being cleared from dirty non-zero state
++                refund += sstore_clears_refund;
++            }
++        }
++
++        // Reset refund: original == new (restoring to original value)
++        if result.original_value == result.new_value {
+             if result.original_value.is_zero() {
+-                refund += (SSTORE_SET - ISTANBUL_SLOAD_GAS) as i64;
++                refund += set_refund;
+             } else {
+-                refund += (SSTORE_RESET - ISTANBUL_SLOAD_GAS) as i64;
++                refund += reset_refund;
+             }
+         }
+-        if !result.present_value.is_zero() && result.new_value.is_zero() {
+-            refund += REFUND_SSTORE_CLEARS;
+-        }
+-        if !result.original_value.is_zero()
+-            && result.present_value.is_zero()
+-            && result.new_value == result.original_value
+-        {
+-            refund -= REFUND_SSTORE_CLEARS;
+-        }
++
+         refund
+     } else if !result.present_value.is_zero() && result.new_value.is_zero() {
+         REFUND_SSTORE_CLEARS
+diff --git a/crates/revmc-builtins/src/ir.rs b/crates/revmc-builtins/src/ir.rs
+index 1239d464..8fec68f5 100644
+--- a/crates/revmc-builtins/src/ir.rs
++++ b/crates/revmc-builtins/src/ir.rs
+@@ -61,7 +61,6 @@ impl<B: Backend> Builtins<B> {
+                 Attribute::NoRecurse,
+                 Attribute::NoSync,
+                 Attribute::NoUnwind,
+-                Attribute::Speculatable,
+             ]
+         };
+         for attr in default_attrs.iter().chain(builtin.attrs()).copied() {
+@@ -154,6 +153,11 @@ macro_rules! builtins {
+                 const LOG: u8 = LOG0;
+                 const DORETURN: u8 = RETURN;
+                 const RESIZEMEMORY: u8 = 0;
++                const UDIV: u8 = DIV;
++                const UREM: u8 = MOD;
++                const SDIVBUILTIN: u8 = SDIV;
++                const SREMBUILTIN: u8 = SMOD;
++                const IMUL: u8 = MUL;
+ 
+                 match self {
+                     $(Self::$ident => [<$ident:upper>]),*
+@@ -214,6 +218,11 @@ builtins! {
+ 
+     Panic          = __revmc_builtin_panic(ptr, usize) None,
+ 
++    UDiv           = __revmc_builtin_udiv(@[sp] ptr) None,
++    URem           = __revmc_builtin_urem(@[sp] ptr) None,
++    SDivBuiltin    = __revmc_builtin_sdiv(@[sp] ptr) None,
++    SRemBuiltin    = __revmc_builtin_srem(@[sp] ptr) None,
++    IMul           = __revmc_builtin_imul(@[sp] ptr) None,
+     AddMod         = __revmc_builtin_addmod(@[sp] ptr) None,
+     MulMod         = __revmc_builtin_mulmod(@[sp] ptr) None,
+     Exp            = __revmc_builtin_exp(@[ecx] ptr, @[sp] ptr, u8) Some(u8),
+@@ -224,7 +233,7 @@ builtins! {
+     CallDataSize   = __revmc_builtin_calldatasize(@[ecx] ptr) Some(usize),
+     CallDataCopy   = __revmc_builtin_calldatacopy(@[ecx] ptr, @[sp] ptr) Some(u8),
+     CodeSize       = __revmc_builtin_codesize(usize) Some(usize),
+-    CodeCopy       = __revmc_builtin_codecopy(@[ecx] ptr, @[sp] ptr, ptr, usize) Some(u8),
++    CodeCopy       = __revmc_builtin_codecopy(@[ecx] ptr, @[sp] ptr) Some(u8),
+     GasPrice       = __revmc_builtin_gas_price(@[ecx] ptr, @[sp] ptr) None,
+     ExtCodeSize    = __revmc_builtin_extcodesize(@[ecx] ptr, @[sp] ptr, u8) Some(u8),
+     ExtCodeCopy    = __revmc_builtin_extcodecopy(@[ecx] ptr, @[sp] ptr, u8) Some(u8),
+diff --git a/crates/revmc-builtins/src/lib.rs b/crates/revmc-builtins/src/lib.rs
+index 3facd73a..ae1cd336 100644
+--- a/crates/revmc-builtins/src/lib.rs
++++ b/crates/revmc-builtins/src/lib.rs
+@@ -17,7 +17,7 @@ use revm_interpreter::{
+     CallInput, CallInputs, CallScheme, CallValue, CreateInputs, CreateScheme, InstructionResult,
+     InterpreterAction, InterpreterResult,
+ };
+-use revm_primitives::{hardfork::SpecId, Bytes, Log, LogData, KECCAK_EMPTY, U256};
++use revm_primitives::{hardfork::SpecId, Bytes, Log, LogData, KECCAK_EMPTY, I256, U256};
+ use revmc_context::{EvmContext, EvmWord};
+ 
+ pub mod gas;
+@@ -80,6 +80,45 @@ pub unsafe extern "C-unwind" fn __revmc_builtin_panic(data: *const u8, len: usiz
+     panic!("{msg}");
+ }
+ 
++#[no_mangle]
++pub unsafe extern "C" fn __revmc_builtin_udiv(rev![a, b]: &mut [EvmWord; 2]) {
++    let divisor = b.to_u256();
++    *b = if divisor.is_zero() { U256::ZERO } else { a.to_u256().wrapping_div(divisor) }.into();
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn __revmc_builtin_urem(rev![a, b]: &mut [EvmWord; 2]) {
++    let divisor = b.to_u256();
++    *b = if divisor.is_zero() { U256::ZERO } else { a.to_u256().wrapping_rem(divisor) }.into();
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn __revmc_builtin_sdiv(rev![a, b]: &mut [EvmWord; 2]) {
++    let divisor = I256::from_raw(b.to_u256());
++    *b = if divisor.is_zero() {
++        U256::ZERO
++    } else {
++        I256::from_raw(a.to_u256()).wrapping_div(divisor).into_raw()
++    }
++    .into();
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn __revmc_builtin_srem(rev![a, b]: &mut [EvmWord; 2]) {
++    let divisor = I256::from_raw(b.to_u256());
++    *b = if divisor.is_zero() {
++        U256::ZERO
++    } else {
++        I256::from_raw(a.to_u256()).wrapping_rem(divisor).into_raw()
++    }
++    .into();
++}
++
++#[no_mangle]
++pub unsafe extern "C" fn __revmc_builtin_imul(rev![a, b]: &mut [EvmWord; 2]) {
++    *b = a.to_u256().wrapping_mul(b.to_u256()).into();
++}
++
+ #[no_mangle]
+ pub unsafe extern "C" fn __revmc_builtin_addmod(rev![a, b, c]: &mut [EvmWord; 3]) {
+     *c = a.to_u256().add_mod(b.to_u256(), c.to_u256()).into();
+@@ -220,10 +259,8 @@ pub unsafe extern "C" fn __revmc_builtin_codesize(bytecode_len: usize) -> usize
+ pub unsafe extern "C" fn __revmc_builtin_codecopy(
+     ecx: &mut EvmContext<'_>,
+     sp: &mut [EvmWord; 3],
+-    bytecode_ptr: *const u8,
+-    bytecode_len: usize,
+ ) -> InstructionResult {
+-    let bytecode = core::slice::from_raw_parts(bytecode_ptr, bytecode_len);
++    let bytecode = core::slice::from_raw_parts(ecx.bytecode_ptr, ecx.bytecode_len);
+     copy_operation(ecx, sp, bytecode)
+ }
+ 
+@@ -574,7 +611,14 @@ pub unsafe extern "C" fn __revmc_builtin_create(
+ 
+     *ecx.next_action =
+         Some(InterpreterAction::NewFrame(revm_interpreter::FrameInput::Create(Box::new(
+-            CreateInputs::new(ecx.input.target_address, scheme, value.to_u256(), code, gas_limit),
++            CreateInputs {
++                caller: ecx.input.target_address,
++                scheme,
++                value: value.to_u256(),
++                init_code: code,
++                gas_limit,
++                skip_nonce_bump: false,
++            },
+         ))));
+ 
+     InstructionResult::Stop
+@@ -635,14 +679,21 @@ pub unsafe extern "C" fn __revmc_builtin_call(
+         usize::MAX // unrealistic value so we are sure it is not used
+     };
+ 
+-    // Load account and calculate gas cost.
+-    let mut account_load = try_host!(ecx.host.load_account_delegated(to));
++    // Load account delegated info for gas calculation.
++    let mut account_load = match ecx.host.load_account_delegated(to) {
++        Some(load) => load,
++        None => return InstructionResult::FatalExternalError,
++    };
+ 
++    // For CALLCODE/DELEGATECALL/STATICCALL, set is_empty to false as we are not creating this
++    // account (matches interpreter behavior).
+     if call_kind != CallKind::Call {
+-        account_load.is_empty = false;
++        account_load.data.is_empty = false;
+     }
+ 
+-    gas!(ecx, gas::call_cost(spec_id, transfers_value, account_load));
++    // Calculate call gas cost (access + transfer + new account).
++    let call_cost = gas::call_cost(spec_id, transfers_value, account_load);
++    gas!(ecx, call_cost);
+ 
+     // EIP-150: Gas cost changes for IO-heavy operations
+     let mut gas_limit = if spec_id.is_enabled_in(SpecId::TANGERINE) {
+@@ -666,7 +717,6 @@ pub unsafe extern "C" fn __revmc_builtin_call(
+             return_memory_offset: out_offset..out_offset + out_len,
+             gas_limit,
+             bytecode_address: to,
+-            known_bytecode: None,
+             target_address: if matches!(call_kind, CallKind::DelegateCall | CallKind::CallCode) {
+                 ecx.input.target_address
+             } else {
+@@ -717,29 +767,19 @@ pub unsafe extern "C" fn __revmc_builtin_selfdestruct(
+ ) -> InstructionResult {
+     ensure_non_staticcall!(ecx);
+ 
+-    // EIP-150: SELFDESTRUCT base cost is 5000 starting from TANGERINE
+-    if spec_id.is_enabled_in(SpecId::TANGERINE) {
+-        gas!(ecx, 5000);
+-    }
+-
+-    let res = match ecx.host.selfdestruct(ecx.input.target_address, target.to_address(), false) {
+-        Ok(r) => r,
+-        Err(_) => return InstructionResult::FatalExternalError,
++    let res = match ecx.host.selfdestruct(ecx.input.target_address, target.to_address()) {
++        Some(r) => r,
++        None => return InstructionResult::FatalExternalError,
+     };
+ 
+-    // EIP-161: State trie clearing (invariant-preserving alternative)
+-    let should_charge_topup = if spec_id.is_enabled_in(SpecId::SPURIOUS_DRAGON) {
+-        res.data.had_value && !res.data.target_exists
+-    } else {
+-        !res.data.target_exists
+-    };
+-
+-    gas!(ecx, ecx.host.gas_params().selfdestruct_cost(should_charge_topup, res.is_cold));
+-
+-    if !res.data.previously_destroyed {
+-        ecx.gas.record_refund(ecx.host.gas_params().selfdestruct_refund());
++    // EIP-3529: Reduction in refunds
++    if !spec_id.is_enabled_in(SpecId::LONDON) && !res.data.previously_destroyed {
++        ecx.gas.record_refund(gas::SELFDESTRUCT);
+     }
+ 
++    // Calculate selfdestruct gas cost (includes base cost, topup, and cold access)
++    gas!(ecx, gas::selfdestruct_cost(spec_id, res));
++
+     InstructionResult::SelfDestruct
+ }
+ 
+diff --git a/crates/revmc-builtins/src/utils.rs b/crates/revmc-builtins/src/utils.rs
+index 800629fb..061bc269 100644
+--- a/crates/revmc-builtins/src/utils.rs
++++ b/crates/revmc-builtins/src/utils.rs
+@@ -57,8 +57,8 @@ fn resize_memory_inner(
+         // Calculate gas cost for memory expansion
+         // memory_gas(num_words, linear_cost, quadratic_cost)
+         // MEMORY = 3 (linear cost per word), MEMORY_QUAD_COEFFICIENT = 512 (1/512 for quadratic)
+-        let new_cost = crate::gas::memory_gas(new_num_words, 3, 512);
+-        let old_cost = crate::gas::memory_gas(current_words, 3, 512);
++        let new_cost = crate::gas::memory_gas(new_num_words);
++        let old_cost = crate::gas::memory_gas(current_words);
+         let cost = new_cost.saturating_sub(old_cost);
+ 
+         if !gas.record_cost(cost) {
+diff --git a/crates/revmc-cli/benches/bench.rs b/crates/revmc-cli/benches/bench.rs
+index ba36d808..ac3a213e 100644
+--- a/crates/revmc-cli/benches/bench.rs
++++ b/crates/revmc-cli/benches/bench.rs
+@@ -36,7 +36,7 @@ fn run_bench(c: &mut Criterion, bench: &Bench) {
+ 
+     let bytecode_raw = Bytecode::new_raw(revmc::primitives::Bytes::copy_from_slice(bytecode));
+ 
+-    let mut host = DummyHost::new(SPEC_ID);
++    let mut host = DummyHost;
+ 
+     let table = instruction_table::<EthInterpreter, DummyHost>();
+ 
+diff --git a/crates/revmc-cli/src/main.rs b/crates/revmc-cli/src/main.rs
+index e48e38b6..9b817b4f 100644
+--- a/crates/revmc-cli/src/main.rs
++++ b/crates/revmc-cli/src/main.rs
+@@ -145,7 +145,7 @@ fn main() -> Result<()> {
+     let bytecode_raw = Bytecode::new_raw(revmc::primitives::Bytes::copy_from_slice(&bytecode));
+     let bytecode_slice = bytecode_raw.original_byte_slice();
+ 
+-    let mut host = DummyHost::new(spec_id);
++    let mut host = DummyHost;
+ 
+     if !stack_input.is_empty() {
+         compiler.inspect_stack_length(true);
+diff --git a/crates/revmc-context/src/lib.rs b/crates/revmc-context/src/lib.rs
+index ca401b5c..3369870e 100644
+--- a/crates/revmc-context/src/lib.rs
++++ b/crates/revmc-context/src/lib.rs
+@@ -45,17 +45,26 @@ pub struct EvmContext<'a> {
+     /// `0` is the initial state.
+     #[doc(hidden)]
+     pub resume_at: usize,
++    /// Pointer to the contract bytecode (for CODECOPY in AOT-cached code).
++    pub bytecode_ptr: *const u8,
++    /// Length of the contract bytecode.
++    pub bytecode_len: usize,
++    /// Pointer to per-instance immediate data table for skeleton-compiled code.
++    /// Null when not using skeleton compilation or when all PUSHes are invariant.
++    pub imm_data_ptr: *const u8,
+ }
+ 
+ // Static assertions to ensure the struct layout matches expectations.
+ // These offsets are used by the JIT compiler to access fields.
+ const _: () = {
+     use core::mem::offset_of;
+-    // EvmContext should be 80 bytes with #[repr(C)] (removed bytecode_ptr and bytecode_len)
+-    assert!(core::mem::size_of::<EvmContext<'_>>() == 80);
++    assert!(core::mem::size_of::<EvmContext<'_>>() == 104);
+     // Key fields accessed by JIT code
+     assert!(offset_of!(EvmContext<'_>, memory) == 0);
+     assert!(offset_of!(EvmContext<'_>, resume_at) == 72);
++    assert!(offset_of!(EvmContext<'_>, bytecode_ptr) == 80);
++    assert!(offset_of!(EvmContext<'_>, bytecode_len) == 88);
++    assert!(offset_of!(EvmContext<'_>, imm_data_ptr) == 96);
+ };
+ 
+ impl fmt::Debug for EvmContext<'_> {
+@@ -82,6 +91,8 @@ impl<'a> EvmContext<'a> {
+         let (stack, stack_len) = EvmStack::from_interpreter_stack(&mut interpreter.stack);
+         let bytecode_slice = interpreter.bytecode.bytecode_slice();
+         let resume_at = ResumeAt::load(interpreter.bytecode.pc(), bytecode_slice);
++        let bytecode_ptr = bytecode_slice.as_ptr();
++        let bytecode_len = bytecode_slice.len();
+         let this = Self {
+             memory: &mut interpreter.memory,
+             input: &mut interpreter.input,
+@@ -91,6 +102,9 @@ impl<'a> EvmContext<'a> {
+             return_data: interpreter.return_data.buffer(),
+             is_static: interpreter.runtime_flag.is_static,
+             resume_at,
++            bytecode_ptr,
++            bytecode_len,
++            imm_data_ptr: ptr::null(),
+         };
+         (this, stack, stack_len)
+     }
+@@ -248,13 +262,36 @@ impl EvmCompilerFn {
+         self,
+         interpreter: &mut Interpreter,
+         host: &mut dyn HostExt,
++    ) -> InterpreterAction {
++        self.call_with_interpreter_data(interpreter, host, ptr::null())
++    }
++
++    /// Like [`call_with_interpreter`](Self::call_with_interpreter), but sets
++    /// `EvmContext::imm_data_ptr` to the given pointer before calling the function.
++    ///
++    /// Used by skeleton-aware compilation to supply the per-instance data table.
++    ///
++    /// # Safety
++    ///
++    /// `imm_data_ptr` must point to a valid data table for the duration of the call,
++    /// or be null if the compiled function does not access it.
++    #[inline]
++    pub unsafe fn call_with_interpreter_data(
++        self,
++        interpreter: &mut Interpreter,
++        host: &mut dyn HostExt,
++        imm_data_ptr: *const u8,
+     ) -> InterpreterAction {
+         interpreter.bytecode.action = None;
+ 
+         let (mut ecx, stack, stack_len) =
+             EvmContext::from_interpreter_with_stack(interpreter, host);
++        ecx.imm_data_ptr = imm_data_ptr;
+         let result = self.call(Some(stack), Some(stack_len), &mut ecx);
+ 
++        // Save resume_at (Copy usize) before ecx's borrow ends.
++        let resume_at = ecx.resume_at;
++
+         // Set the remaining gas to 0 if the result is `OutOfGas`,
+         // as it might have overflown inside of the function.
+         if result == InstructionResult::OutOfGas {
+@@ -262,11 +299,16 @@ impl EvmCompilerFn {
+         }
+ 
+         let return_data_is_empty = ecx.return_data.is_empty();
++        // ecx is no longer used after this point; NLL releases the borrow.
+ 
+         if return_data_is_empty {
+             interpreter.return_data.0.clear();
+         }
+ 
++        // Persist the resume_at value in the interpreter's bytecode PC so that
++        // subsequent calls can correctly resume after a CALL/CREATE suspension.
++        interpreter.bytecode.absolute_jump(resume_at);
++
+         if let Some(action) = interpreter.bytecode.action.take() {
+             action
+         } else {
+diff --git a/crates/revmc-llvm/src/lib.rs b/crates/revmc-llvm/src/lib.rs
+index 8a04e981..86de704a 100644
+--- a/crates/revmc-llvm/src/lib.rs
++++ b/crates/revmc-llvm/src/lib.rs
+@@ -562,6 +562,59 @@ impl<'ctx> EvmLlvmBuilder<'_, 'ctx> {
+         let kind_id = self.cx.get_kind_id("prof");
+         inst.set_metadata(metadata, kind_id).unwrap();
+     }
++
++    #[inline]
++    fn i256_lane_byte_offset(lane: u64) -> u64 {
++        if cfg!(target_endian = "little") {
++            lane * 8
++        } else {
++            (3 - lane) * 8
++        }
++    }
++
++    fn load_i256_as_i64_lanes(&mut self, ptr: PointerValue<'ctx>, align: u32, name: &str) -> BasicValueEnum<'ctx> {
++        let mut acc = self.ty_i256.const_zero();
++        for lane in 0..4u64 {
++            let offset = self.ty_isize.const_int(Self::i256_lane_byte_offset(lane), false);
++            let lane_ptr =
++                unsafe { self.bcx.build_in_bounds_gep(self.ty_i8, ptr, &[offset], "") }.unwrap();
++            let lane_val = self
++                .bcx
++                .build_load(self.ty_i64, lane_ptr, if lane == 0 { name } else { "" })
++                .unwrap()
++                .into_int_value();
++            self.current_block().unwrap().get_last_instruction().unwrap().set_alignment(align).unwrap();
++
++            let lane_val = self.bcx.build_int_z_extend(lane_val, self.ty_i256, "").unwrap();
++            let shifted = if lane == 0 {
++                lane_val
++            } else {
++                let shift = self.ty_i256.const_int(lane * 64, false);
++                self.bcx.build_left_shift(lane_val, shift, "").unwrap()
++            };
++            acc = self.bcx.build_or(acc, shifted, "").unwrap();
++        }
++        acc.into()
++    }
++
++    fn store_i256_as_i64_lanes(&mut self, value: BasicValueEnum<'ctx>, ptr: PointerValue<'ctx>, align: u32) {
++        let value = value.into_int_value();
++        for lane in 0..4u64 {
++            let shifted = if lane == 0 {
++                value
++            } else {
++                let shift = self.ty_i256.const_int(lane * 64, false);
++                self.bcx.build_right_shift(value, shift, false, "").unwrap()
++            };
++            let lane_val = self.bcx.build_int_truncate(shifted, self.ty_i64, "").unwrap();
++
++            let offset = self.ty_isize.const_int(Self::i256_lane_byte_offset(lane), false);
++            let lane_ptr =
++                unsafe { self.bcx.build_in_bounds_gep(self.ty_i8, ptr, &[offset], "") }.unwrap();
++            let inst = self.bcx.build_store(lane_ptr, lane_val).unwrap();
++            inst.set_alignment(align).unwrap();
++        }
++    }
+ }
+ 
+ impl<'ctx> BackendTypes for EvmLlvmBuilder<'_, 'ctx> {
+@@ -700,20 +753,34 @@ impl Builder for EvmLlvmBuilder<'_, '_> {
+     }
+ 
+     fn load(&mut self, ty: Self::Type, ptr: Self::Value, name: &str) -> Self::Value {
++        if ty == self.ty_i256.into() {
++            return self.load_i256_as_i64_lanes(ptr.into_pointer_value(), 8, name);
++        }
+         self.bcx.build_load(ty, ptr.into_pointer_value(), name).unwrap()
+     }
+ 
+     fn load_unaligned(&mut self, ty: Self::Type, ptr: Self::Value, name: &str) -> Self::Value {
++        if ty == self.ty_i256.into() {
++            return self.load_i256_as_i64_lanes(ptr.into_pointer_value(), 1, name);
++        }
+         let value = self.load(ty, ptr, name);
+         self.current_block().unwrap().get_last_instruction().unwrap().set_alignment(1).unwrap();
+         value
+     }
+ 
+     fn store(&mut self, value: Self::Value, ptr: Self::Value) {
++        if value.get_type() == self.ty_i256.into() {
++            self.store_i256_as_i64_lanes(value, ptr.into_pointer_value(), 8);
++            return;
++        }
+         self.bcx.build_store(ptr.into_pointer_value(), value).unwrap();
+     }
+ 
+     fn store_unaligned(&mut self, value: Self::Value, ptr: Self::Value) {
++        if value.get_type() == self.ty_i256.into() {
++            self.store_i256_as_i64_lanes(value, ptr.into_pointer_value(), 1);
++            return;
++        }
+         let inst = self.bcx.build_store(ptr.into_pointer_value(), value).unwrap();
+         inst.set_alignment(1).unwrap();
+     }
+diff --git a/crates/revmc/Cargo.toml b/crates/revmc/Cargo.toml
+index d6a803c2..eb135a19 100644
+--- a/crates/revmc/Cargo.toml
++++ b/crates/revmc/Cargo.toml
+@@ -46,6 +46,7 @@ similar-asserts = { version = "1.5", optional = true }
+ 
+ [dev-dependencies]
+ revmc-context = { workspace = true, features = ["host-ext-any"] }
++hex-literal = "0.4"
+ paste.workspace = true
+ similar-asserts = "1.5"
+ tempfile = "3.10"
+diff --git a/crates/revmc/src/bytecode/mod.rs b/crates/revmc/src/bytecode/mod.rs
+index efb3a048..b353d067 100644
+--- a/crates/revmc/src/bytecode/mod.rs
++++ b/crates/revmc/src/bytecode/mod.rs
+@@ -2,7 +2,7 @@
+ 
+ use bitvec::vec::BitVec;
+ use revm_bytecode::opcode as op;
+-use revm_primitives::{hardfork::SpecId, hex};
++use revm_primitives::{hardfork::SpecId, hex, U256};
+ use revmc_backend::Result;
+ use rustc_hash::FxHashMap;
+ use std::fmt;
+@@ -175,6 +175,41 @@ impl<'a> Bytecode<'a> {
+         Ok(())
+     }
+ 
++    /// Apply skeleton variance classification to instruction flags.
++    /// Must be called after `analyze()`.
++    ///
++    /// Marks variant PUSHes with `VARIANT_PUSH` flag and stores their data table offset.
++    /// PUSH0 is skipped (always invariant, not in variance map).
++    pub(crate) fn apply_variance(&mut self, variance: &crate::skeleton::SkeletonVariance) {
++        let mut push_index = 0usize;
++        for inst in &mut self.insts {
++            if inst.opcode >= op::PUSH1 && inst.opcode <= op::PUSH32 {
++                assert!(
++                    push_index < variance.pushes.len(),
++                    "variance map has fewer entries than bytecode PUSH instructions"
++                );
++                match variance.pushes[push_index] {
++                    crate::skeleton::PushClassification::Variant { table_index } => {
++                        assert!(
++                            !inst.flags.contains(InstFlags::SKIP_LOGIC),
++                            "PUSH at index {} is both SKIP_LOGIC and Variant",
++                            push_index
++                        );
++                        inst.flags |= InstFlags::VARIANT_PUSH;
++                        inst.data = table_index;
++                    }
++                    crate::skeleton::PushClassification::Invariant => {}
++                }
++                push_index += 1;
++            }
++        }
++        assert_eq!(
++            push_index,
++            variance.pushes.len(),
++            "variance map has more entries than bytecode PUSH instructions"
++        );
++    }
++
+     /// Mark `PUSH<N>` followed by `JUMP[I]` as `STATIC_JUMP` and resolve the target.
+     #[instrument(name = "sj", level = "debug", skip_all)]
+     fn static_jump_analysis(&mut self) {
+@@ -311,6 +346,20 @@ impl<'a> Bytecode<'a> {
+         self.code.get(start..start + imm_len)
+     }
+ 
++    /// The runtime value of a PUSH immediate. Immediate bytes truncated by
++    /// the physical end of code read as zero in the EVM, i.e. the present
++    /// bytes are zero-extended on the right up to the declared width.
++    pub(crate) fn push_imm_value(&self, data: &InstData) -> U256 {
++        let imm_len = data.imm_len() as usize;
++        if imm_len == 0 {
++            return U256::ZERO;
++        }
++        let start = data.pc as usize + 1;
++        let Some(avail) = self.code.get(start..) else { return U256::ZERO };
++        let take = imm_len.min(avail.len());
++        U256::from_be_slice(&avail[..take]) << (8 * (imm_len - take))
++    }
++
+     /// Returns `true` if the given program counter is a valid jump destination.
+     fn is_valid_jump(&self, pc: usize) -> bool {
+         self.jumpdests.get(pc).as_deref().copied() == Some(true)
+@@ -407,6 +456,7 @@ pub(crate) struct InstData {
+     /// - if the instruction has immediate data, this is a packed offset+length into the bytecode;
+     /// - `JUMP{,I} && STATIC_JUMP in kind`: the jump target, `Instr`;
+     /// - `JUMPDEST`: `1` if the jump destination is reachable, `0` otherwise;
++    /// - `PUSH1..PUSH32 && VARIANT_PUSH`: data table index (byte offset = value * 32);
+     /// - otherwise: no meaning.
+     pub(crate) data: u32,
+     /// The program counter, meaning `code[pc]` is this instruction's opcode.
+@@ -431,13 +481,16 @@ impl PartialEq<InstData> for u8 {
+ 
+ impl fmt::Debug for InstData {
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+-        f.debug_struct("InstData")
+-            .field("opcode", &self.to_op())
++        let mut s = f.debug_struct("InstData");
++        s.field("opcode", &self.to_op())
+             .field("flags", &format_args!("{:?}", self.flags))
+             .field("data", &self.data)
+             .field("pc", &self.pc)
+-            .field("section", &self.section)
+-            .finish()
++            .field("section", &self.section);
++        if self.flags.contains(InstFlags::VARIANT_PUSH) {
++            s.field("imm_table_index", &self.data);
++        }
++        s.finish()
+     }
+ }
+ 
+@@ -580,6 +633,9 @@ bitflags::bitflags! {
+         /// Always returns [`InstructionResult::NotFound`] at runtime.
+         const UNKNOWN = 1 << 4;
+ 
++        /// This PUSH loads its value from the per-instance data table (skeleton compilation).
++        const VARIANT_PUSH = 1 << 5;
++
+         /// Skip generating instruction logic, but keep the gas calculation.
+         const SKIP_LOGIC = 1 << 6;
+         /// Don't generate any code.
+diff --git a/crates/revmc/src/compiler/mod.rs b/crates/revmc/src/compiler/mod.rs
+index 239e6b57..fa05e7fd 100644
+--- a/crates/revmc/src/compiler/mod.rs
++++ b/crates/revmc/src/compiler/mod.rs
+@@ -213,6 +213,18 @@ impl<B: Backend> EvmCompiler<B> {
+         self.config.gas_metering = yes;
+     }
+ 
++    /// Sets the branch profile for PGO-guided compilation.
++    /// When set, JUMPI instructions will emit branch weight hints based on
++    /// the provided taken/not-taken counts.
++    pub fn set_branch_profile(&mut self, profile: crate::profile::BranchProfile) {
++        self.config.branch_profile = Some(profile);
++    }
++
++    /// Clears the branch profile.
++    pub fn clear_branch_profile(&mut self) {
++        self.config.branch_profile = None;
++    }
++
+     /// Translates the given EVM bytecode into an internal function.
+     ///
+     /// NOTE: `name` must be unique for each function, as it is used as the name of the final
+@@ -229,6 +241,49 @@ impl<B: Backend> EvmCompiler<B> {
+         self.translate_inner(name, &bytecode)
+     }
+ 
++    /// Translates EVM bytecode using skeleton-aware compilation.
++    ///
++    /// Like [`translate`](Self::translate), but applies variance classification so that
++    /// variant PUSHes load from a per-instance data table instead of using inline constants.
++    /// The caller must set `EvmContext::imm_data_ptr` before invoking the compiled function.
++    ///
++    /// If `variance` has no variant PUSHes (all Invariant), this produces identical code
++    /// to `translate()` — zero overhead for singletons.
++    pub fn translate_skeleton<'a>(
++        &mut self,
++        name: &str,
++        input: impl Into<EvmCompilerInput<'a>>,
++        spec_id: SpecId,
++        variance: &crate::skeleton::SkeletonVariance,
++    ) -> Result<B::FuncId> {
++        ensure!(cfg!(target_endian = "little"), "only little-endian is supported");
++        ensure!(!self.finalized, "cannot compile more functions after finalizing the module");
++        let mut bytecode = self.parse(input.into(), spec_id)?;
++        bytecode.apply_variance(variance);
++        self.translate_inner(name, &bytecode)
++    }
++
++    /// (JIT) Compiles skeleton-aware EVM bytecode into a JIT function.
++    ///
++    /// See [`translate_skeleton`](Self::translate_skeleton) for more information.
++    ///
++    /// # Safety
++    ///
++    /// The returned function pointer is owned by the module, and must not be called after the
++    /// module is cleared or the function is freed. If the variance map contains variant PUSHes,
++    /// the caller must set `EvmContext::imm_data_ptr` to a valid data table before calling
++    /// the returned function; otherwise the function will dereference a null pointer.
++    pub unsafe fn jit_skeleton<'a>(
++        &mut self,
++        name: &str,
++        bytecode: impl Into<EvmCompilerInput<'a>>,
++        spec_id: SpecId,
++        variance: &crate::skeleton::SkeletonVariance,
++    ) -> Result<EvmCompilerFn> {
++        let id = self.translate_skeleton(name, bytecode.into(), spec_id, variance)?;
++        unsafe { self.jit_function(id) }
++    }
++
+     /// (JIT) Compiles the given EVM bytecode into a JIT function.
+     ///
+     /// See [`translate`](Self::translate) for more information.
+@@ -329,7 +384,7 @@ impl<B: Backend> EvmCompiler<B> {
+         ensure!(self.backend.function_name_is_unique(name), "function name `{name}` is not unique");
+         let linkage = Linkage::Public;
+         let (bcx, id) = Self::make_builder(&mut self.backend, &self.config, name, linkage)?;
+-        FunctionCx::translate(bcx, self.config, &mut self.builtins, bytecode)?;
++        FunctionCx::translate(bcx, self.config.clone(), &mut self.builtins, bytecode)?;
+         Ok(id)
+     }
+ 
+@@ -417,8 +472,9 @@ impl<B: Backend> EvmCompiler<B> {
+         if !config.debug_assertions {
+             for &(i, size, align) in ptr_attrs {
+                 let attrs = default_attrs::for_sized_ptr((size, align))
+-                    // `Gas` is aliased in `EvmContext`.
+-                    .chain((i != 0).then_some(Attribute::NoAlias));
++                    // `Gas` and `InputsImpl` are reachable through `EvmContext` and can alias
++                    // parameters 0 and 3. Keep `noalias` only for stack and stack_len.
++                    .chain(matches!(i, 1 | 2).then_some(Attribute::NoAlias));
+                 for attr in attrs {
+                     let loc = FunctionAttributeLocation::Param(i as _);
+                     bcx.add_function_attribute(None, attr, loc);
+@@ -514,7 +570,6 @@ mod default_attrs {
+             Attribute::WillReturn,      // Always returns.
+             Attribute::NoSync,          // No thread synchronization.
+             Attribute::NativeTargetCpu, // Optimization.
+-            Attribute::Speculatable,    // No undefined behavior.
+             Attribute::NoRecurse,       // Revm is not recursive.
+         ]
+         .into_iter()
+diff --git a/crates/revmc/src/compiler/translate.rs b/crates/revmc/src/compiler/translate.rs
+index 63ec9744..17e6c6f2 100644
+--- a/crates/revmc/src/compiler/translate.rs
++++ b/crates/revmc/src/compiler/translate.rs
+@@ -14,7 +14,7 @@ use std::{fmt::Write, mem, sync::atomic::AtomicPtr};
+ const STACK_CAP: usize = 1024;
+ // const WORD_SIZE: usize = 32;
+ 
+-#[derive(Clone, Copy, Debug)]
++#[derive(Clone, Debug)]
+ pub(super) struct FcxConfig {
+     pub(super) comments: bool,
+     pub(super) debug_assertions: bool,
+@@ -24,6 +24,8 @@ pub(super) struct FcxConfig {
+     pub(super) inspect_stack_length: bool,
+     pub(super) stack_bound_checks: bool,
+     pub(super) gas_metering: bool,
++
++    pub(super) branch_profile: Option<crate::profile::BranchProfile>,
+ }
+ 
+ impl Default for FcxConfig {
+@@ -36,6 +38,7 @@ impl Default for FcxConfig {
+             inspect_stack_length: false,
+             stack_bound_checks: true,
+             gas_metering: true,
++            branch_profile: None,
+         }
+     }
+ }
+@@ -272,18 +275,18 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+         };
+ 
+         // We store the stack length if requested or necessary due to the bytecode.
+-        let stack_length_observable = config.inspect_stack_length || bytecode.may_suspend();
++        let stack_length_observable = fx.config.inspect_stack_length || bytecode.may_suspend();
+ 
+         // Add debug assertions for the parameters.
+-        if config.debug_assertions {
++        if fx.config.debug_assertions {
+             fx.pointer_panic_with_bool(
+-                config.gas_metering,
++                fx.config.gas_metering,
+                 gas_ptr,
+                 "gas pointer",
+                 "gas metering is enabled",
+             );
+             fx.pointer_panic_with_bool(
+-                !config.local_stack,
++                !fx.config.local_stack,
+                 sp_arg,
+                 "stack pointer",
+                 "local stack is disabled",
+@@ -292,7 +295,7 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+                 stack_length_observable,
+                 stack_len_arg,
+                 "stack length pointer",
+-                if config.inspect_stack_length {
++                if fx.config.inspect_stack_length {
+                     "stack length inspection is enabled"
+                 } else {
+                     "bytecode suspends execution"
+@@ -344,9 +347,10 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+ 
+         // Finalize the suspend and resume blocks. Must come before the return block.
+         // Also here is where the stack length is initialized.
++        let inspect_stack_length = fx.config.inspect_stack_length;
+         let load_len_at_start = |fx: &mut Self| {
+             // Loaded from args only for the config.
+-            if config.inspect_stack_length {
++            if inspect_stack_length {
+                 let stack_len = fx.bcx.load(fx.isize_type, stack_len_arg, "stack_len");
+                 fx.stack_len.store(&mut fx.bcx, stack_len);
+             } else {
+@@ -629,15 +633,7 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+                 let r = self.bcx.select(overflow, default, r);
+                 self.push(r);
+             }};
+-            (@if_not_zero $op:ident) => {{
+-                // TODO: `select` might not have the same semantics in all backends.
+-                let [a, b] = self.popn();
+-                let b_is_zero = self.bcx.icmp_imm(IntCC::Equal, b, 0);
+-                let zero = self.bcx.iconst_256(U256::ZERO);
+-                let op_result = self.bcx.$op(a, b);
+-                let r = self.bcx.select(b_is_zero, zero, op_result);
+-                self.push(r);
+-            }};
++
+         }
+ 
+         macro_rules! field {
+@@ -679,29 +675,29 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+             op::ADD => binop!(iadd),
+             op::MUL => binop!(imul),
+             op::SUB => binop!(isub),
+-            op::DIV => binop!(@if_not_zero udiv),
++            op::DIV => {
++                let sp = self.sp_after_inputs();
++                let _ = self.call_builtin(Builtin::UDiv, &[sp]);
++            }
+             op::SDIV => {
++                let sp = self.sp_after_inputs();
++                let _ = self.call_builtin(Builtin::SDivBuiltin, &[sp]);
++            }
++            op::MOD => {
++                let sp = self.sp_after_inputs();
++                let _ = self.call_builtin(Builtin::URem, &[sp]);
++            }
++            op::SMOD => {
+                 let [a, b] = self.popn();
+                 let b_is_zero = self.bcx.icmp_imm(IntCC::Equal, b, 0);
+                 let r = self.bcx.lazy_select(
+                     b_is_zero,
+                     self.word_type,
+                     |bcx| bcx.iconst_256(U256::ZERO),
+-                    |bcx| {
+-                        let min = bcx.iconst_256(I256_MIN);
+-                        let is_weird_sdiv_edge_case = {
+-                            let a_is_min = bcx.icmp(IntCC::Equal, a, min);
+-                            let b_is_neg1 = bcx.icmp_imm(IntCC::Equal, b, -1);
+-                            bcx.bitand(a_is_min, b_is_neg1)
+-                        };
+-                        let sdiv_result = bcx.sdiv(a, b);
+-                        bcx.select(is_weird_sdiv_edge_case, min, sdiv_result)
+-                    },
++                    |bcx| bcx.srem(a, b),
+                 );
+                 self.push(r);
+             }
+-            op::MOD => binop!(@if_not_zero urem),
+-            op::SMOD => binop!(@if_not_zero srem),
+             op::ADDMOD => {
+                 let sp = self.sp_after_inputs();
+                 let _ = self.call_builtin(Builtin::AddMod, &[sp]);
+@@ -798,23 +794,24 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+                 self.call_fallible_builtin(Builtin::CallDataCopy, &[self.ecx, sp]);
+             }
+             op::CODESIZE => {
++                // Loaded from EvmContext at runtime (not baked in at compile
++                // time) so EMSE skeleton members with differing metadata/zero
++                // suffix lengths can share one compiled artifact.
++                let bytecode_len_ptr = get_field(
++                    &mut self.bcx,
++                    self.ecx,
++                    mem::offset_of!(EvmContext<'_>, bytecode_len),
++                    "ecx.bytecode_len.addr",
++                );
+                 let bytecode_len =
+-                    self.bcx.uconst(self.isize_type, self.bytecode.code.len() as u64);
++                    self.bcx.load(self.isize_type, bytecode_len_ptr, "bytecode_len");
+                 let size = self.call_builtin(Builtin::CodeSize, &[bytecode_len]).unwrap();
+                 let size = self.bcx.zext(self.word_type, size);
+                 self.push(size);
+             }
+             op::CODECOPY => {
+                 let sp = self.sp_after_inputs();
+-                let bytecode_ptr_int =
+-                    self.bcx.uconst(self.isize_type, self.bytecode.code.as_ptr() as u64);
+-                let bytecode_ptr = self.bcx.inttoptr(bytecode_ptr_int, self.ptr_type);
+-                let bytecode_len =
+-                    self.bcx.uconst(self.isize_type, self.bytecode.code.len() as u64);
+-                self.call_fallible_builtin(
+-                    Builtin::CodeCopy,
+-                    &[self.ecx, sp, bytecode_ptr, bytecode_len],
+-                );
++                self.call_fallible_builtin(Builtin::CodeCopy, &[self.ecx, sp]);
+             }
+ 
+             op::GASPRICE => {
+@@ -949,7 +946,29 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+                         if target == self.return_block.unwrap() {
+                             self.add_invalid_jump();
+                         }
+-                        self.bcx.brif(cond, target, next);
++                        // PGO: if we have branch profile, emit weighted branch.
++                        // cond=true -> jump to target (taken), cond=false -> fall through (not-taken).
++                        let used_pgo = if let Some(ref profile) = self.config.branch_profile {
++                            let pc = data.pc;
++                            if let Some(&(taken, not_taken)) = profile.branches.get(&pc) {
++                                let total = taken + not_taken;
++                                if total > 0 && (taken * 5 < total || not_taken * 5 < total) {
++                                    // One side is <20% -> use brif_cold
++                                    let then_is_cold = taken * 5 < total;
++                                    self.bcx.brif_cold(cond, target, next, then_is_cold);
++                                    true
++                                } else {
++                                    false
++                                }
++                            } else {
++                                false
++                            }
++                        } else {
++                            false
++                        };
++                        if !used_pgo {
++                            self.bcx.brif(cond, target, next);
++                        }
+                     } else {
+                         self.bcx.br(target);
+                     }
+@@ -993,11 +1012,36 @@ impl<'a, B: Backend> FunctionCx<'a, B> {
+                 self.push(value);
+             }
+             op::PUSH1..=op::PUSH32 => {
+-                // NOTE: This can be None if the bytecode is invalid.
+-                let imm = self.bytecode.get_imm(data);
+-                let value = imm.map(U256::from_be_slice).unwrap_or_default();
+-                let value = self.bcx.iconst_256(value);
+-                self.push(value);
++                if data.flags.contains(InstFlags::VARIANT_PUSH) {
++                    // Load i256 from per-instance data table (32-byte LE entries).
++                    // 1. Load imm_data_ptr from EvmContext.
++                    let table_ptr_ptr = get_field(
++                        &mut self.bcx,
++                        self.ecx,
++                        mem::offset_of!(EvmContext<'_>, imm_data_ptr),
++                        "ecx.imm_data_ptr.addr",
++                    );
++                    let table_ptr =
++                        self.bcx.load(self.ptr_type, table_ptr_ptr, "imm_table_ptr");
++                    // 2. GEP to the entry: byte_offset = table_index * 32.
++                    let byte_offset = data.data as i64 * 32;
++                    let offset = self.bcx.iconst(self.isize_type, byte_offset);
++                    let elem_ptr = self.bcx.gep(
++                        self.bcx.type_int(8),
++                        table_ptr,
++                        &[offset],
++                        "imm.ptr",
++                    );
++                    // 3. Load i256 (LE on x86-64, matching U256 memory layout).
++                    let value = self.bcx.load(self.word_type, elem_ptr, "imm.val");
++                    self.push(value);
++                } else {
++                    // Existing path: compile-time constant. Truncated
++                    // immediates zero-extend on the right per EVM semantics.
++                    let value = self.bytecode.push_imm_value(data);
++                    let value = self.bcx.iconst_256(value);
++                    self.push(value);
++                }
+             }
+ 
+             op::DUP1..=op::DUP16 => self.dup((opcode - op::DUP1 + 1) as usize),
+diff --git a/crates/revmc/src/emse.rs b/crates/revmc/src/emse.rs
+new file mode 100644
+index 00000000..53debef2
+--- /dev/null
++++ b/crates/revmc/src/emse.rs
+@@ -0,0 +1,635 @@
++//! EMSE-style skeleton boundary: suffix stripping and admission guards.
++//!
++//! The EMSE boundary extends the plain PUSH-immediate skeleton by also
++//! stripping the Solidity CBOR metadata trailer and trailing zero bytes
++//! before comparing bytecodes. Members of one EMSE family may therefore have
++//! different raw lengths; callers must strip suffixes (`strip_emse_suffixes`)
++//! before running PUSH-variance analysis or building data tables.
++//!
++//! Sharing one compiled artifact across members whose stripped suffixes
++//! differ is only sound when execution can never reach the stripped region.
++//! [`tail_can_fall_through`] (skeleton-level) and
++//! [`stripped_suffix_has_jumpdest`] (member-level) are the conservative
++//! admission guards enforcing that.
++
++use revm_bytecode::opcode as op;
++use revm_primitives::B256;
++use std::collections::{HashMap, HashSet};
++use std::hash::{Hash, Hasher};
++
++/// g2 member filtering is off under the hardened interpreter semantics
++/// (jumps into the stripped metadata region are invalid on BOTH sides, so a
++/// metadata JUMPDEST can never be taken): the metadata boundary is reliably
++/// identifiable today, so alignment replaces filtering. g1 stays on because
++/// the code/data boundary inside the code region is NOT reliably
++/// identifiable — only the reachability proof works there. Both become
++/// unnecessary once EOF-style formats separate code/data/metadata. Flip to
++/// true for vanilla yellow-paper jump semantics.
++pub const ENFORCE_G2: bool = false;
++
++/// Family-boundary selector for skeleton grouping.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum SkeletonMode {
++    /// PUSH-immediates-only skeleton over the full bytecode.
++    Current,
++    /// EMSE boundary: strip CBOR metadata + trailing zeros first.
++    Emse,
++}
++
++impl SkeletonMode {
++    /// Stable tag used in CLI flags, logs, and cache-file names.
++    pub fn as_str(self) -> &'static str {
++        match self {
++            SkeletonMode::Current => "current",
++            SkeletonMode::Emse => "emse",
++        }
++    }
++}
++
++impl core::str::FromStr for SkeletonMode {
++    type Err = String;
++
++    fn from_str(s: &str) -> Result<Self, Self::Err> {
++        match s {
++            "current" => Ok(SkeletonMode::Current),
++            "emse" => Ok(SkeletonMode::Emse),
++            other => Err(format!("unknown skeleton mode '{other}', expected current|emse")),
++        }
++    }
++}
++
++/// The bytecode view PUSH-variance analysis and data tables must be built
++/// from under `mode`: the full bytecode for `Current`, the suffix-stripped
++/// region for `Emse`. Callers strip first — never feed full bytecodes of an
++/// EMSE family into `analyze_skeleton_group`.
++pub fn bytecode_view(bytes: &[u8], mode: SkeletonMode) -> &[u8] {
++    match mode {
++        SkeletonMode::Current => bytes,
++        SkeletonMode::Emse => strip_emse_suffixes(bytes),
++    }
++}
++
++/// Skeleton bytes under `mode`; their hash is the family key.
++pub fn skeleton_bytes(bytes: &[u8], mode: SkeletonMode) -> Vec<u8> {
++    match mode {
++        SkeletonMode::Current => crate::skeleton::extract_opcode_skeleton(bytes),
++        SkeletonMode::Emse => extract_emse_skeleton(bytes),
++    }
++}
++
++/// One admitted skeleton family (two or more members after guards).
++#[derive(Clone, Debug)]
++pub struct SkeletonFamily {
++    /// Family key: hash of the mode's skeleton bytes (collision-split
++    /// subgroups get a salted rehash).
++    pub skel_hash: u64,
++    /// Member code hashes, sorted for cross-run determinism.
++    pub members: Vec<B256>,
++}
++
++/// Rejection / verification counters reported per corpus.
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
++pub struct GroupingStats {
++    /// Extra subgroups produced by skeleton-byte verification inside one
++    /// hash bucket (0 unless a 64-bit hash collision actually occurred).
++    pub collision_groups_split: usize,
++    /// EMSE g1: whole skeletons rejected because their stripped region can
++    /// fall through its physical end.
++    pub g1_rejected_skeletons: usize,
++    /// Members belonging to g1-rejected skeletons.
++    pub g1_rejected_members: usize,
++    /// EMSE g2: members rejected because their stripped suffix contains a
++    /// valid JUMPDEST.
++    pub g2_rejected_members: usize,
++}
++
++/// Result of [`group_skeleton_families`].
++#[derive(Clone, Debug)]
++pub struct SkeletonGrouping {
++    /// Admitted families (>= 2 members), largest first.
++    pub families: Vec<SkeletonFamily>,
++    /// Everything else — singletons plus guard-rejected members — which must
++    /// be compiled per-hash. Sorted.
++    pub per_hash: Vec<B256>,
++    /// Verification and guard counters.
++    pub stats: GroupingStats,
++}
++
++fn hash_bytes(bytes: &[u8]) -> u64 {
++    let mut hasher = std::collections::hash_map::DefaultHasher::new();
++    bytes.hash(&mut hasher);
++    hasher.finish()
++}
++
++fn salted_hash(bytes: &[u8], salt: u64) -> u64 {
++    let mut hasher = std::collections::hash_map::DefaultHasher::new();
++    salt.hash(&mut hasher);
++    bytes.hash(&mut hasher);
++    hasher.finish()
++}
++
++/// Split one hash bucket into subgroups of byte-identical skeletons.
++/// Returns more than one subgroup only on a real 64-bit hash collision.
++fn split_by_skeleton(members_with_skel: Vec<(B256, Vec<u8>)>) -> Vec<(Vec<u8>, Vec<B256>)> {
++    let mut subgroups: Vec<(Vec<u8>, Vec<B256>)> = Vec::with_capacity(1);
++    for (member, skel) in members_with_skel {
++        match subgroups.iter_mut().find(|(s, _)| *s == skel) {
++            Some((_, group)) => group.push(member),
++            None => subgroups.push((skel, vec![member])),
++        }
++    }
++    subgroups
++}
++
++/// Group `contracts` into skeleton families under `mode`.
++///
++/// The family key is the hash of the mode's skeleton bytes, verified by full
++/// skeleton-byte equality within each hash bucket (colliding buckets are
++/// split; split-off subgroups get salted rehashes so cache keys stay
++/// unique). Under [`SkeletonMode::Emse`] the two admission guards run at
++/// family-formation time: [`tail_can_fall_through`] rejects whole skeletons,
++/// [`stripped_suffix_has_jumpdest`] rejects individual members. Rejected
++/// members and singletons land in `per_hash`.
++pub fn group_skeleton_families(
++    contracts: &HashMap<B256, Vec<u8>>,
++    mode: SkeletonMode,
++) -> SkeletonGrouping {
++    let mut stats = GroupingStats::default();
++    // The skeleton is carried into the bucket rather than re-derived below:
++    // re-deriving costs a second strip plus a fresh allocation per member.
++    let mut buckets: HashMap<u64, Vec<(B256, Vec<u8>)>> = HashMap::new();
++    for (code_hash, bytes) in contracts {
++        let skel = skeleton_bytes(bytes, mode);
++        buckets.entry(hash_bytes(&skel)).or_default().push((*code_hash, skel));
++    }
++
++    let mut used_hashes: HashSet<u64> = buckets.keys().copied().collect();
++    let mut bucket_list: Vec<(u64, Vec<(B256, Vec<u8>)>)> = buckets.into_iter().collect();
++    bucket_list.sort_by_key(|(h, _)| *h);
++
++    let mut families = Vec::new();
++    let mut per_hash = Vec::new();
++
++    for (bucket_hash, mut with_skel) in bucket_list {
++        with_skel.sort_by(|a, b| a.0.cmp(&b.0));
++        if with_skel.len() == 1 {
++            per_hash.push(with_skel[0].0);
++            continue;
++        }
++
++        let mut subgroups = split_by_skeleton(with_skel);
++        if subgroups.len() > 1 {
++            stats.collision_groups_split += subgroups.len() - 1;
++            subgroups.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then_with(|| a.0.cmp(&b.0)));
++        }
++
++        for (idx, (skel, mut group_members)) in subgroups.into_iter().enumerate() {
++            let skel_hash = if idx == 0 {
++                bucket_hash
++            } else {
++                let mut salt = idx as u64;
++                loop {
++                    let candidate = salted_hash(&skel, salt);
++                    if used_hashes.insert(candidate) {
++                        break candidate;
++                    }
++                    salt += 1;
++                }
++            };
++
++            if mode == SkeletonMode::Emse {
++                if tail_can_fall_through(&skel) {
++                    stats.g1_rejected_skeletons += 1;
++                    stats.g1_rejected_members += group_members.len();
++                    per_hash.extend(group_members);
++                    continue;
++                }
++                if ENFORCE_G2 {
++                    group_members.retain(|m| {
++                        let full = &contracts[m];
++                        let stripped_len = strip_emse_suffixes(full).len();
++                        if stripped_suffix_has_jumpdest(full, stripped_len) {
++                            stats.g2_rejected_members += 1;
++                            per_hash.push(*m);
++                            false
++                        } else {
++                            true
++                        }
++                    });
++                }
++            }
++
++            if group_members.len() >= 2 {
++                families.push(SkeletonFamily { skel_hash, members: group_members });
++            } else {
++                per_hash.extend(group_members);
++            }
++        }
++    }
++
++    families.sort_by(|a, b| {
++        b.members.len().cmp(&a.members.len()).then_with(|| a.skel_hash.cmp(&b.skel_hash))
++    });
++    per_hash.sort();
++    SkeletonGrouping { families, per_hash, stats }
++}
++
++/// Extract an EMSE-style skeleton: strip the Solidity CBOR metadata trailer
++/// and trailing zero bytes, then zero out every PUSH immediate byte while
++/// preserving the stripped code length.
++pub fn extract_emse_skeleton(bytes: &[u8]) -> Vec<u8> {
++    let code = strip_emse_suffixes(bytes);
++    let mut skeleton = Vec::with_capacity(code.len());
++    let mut i = 0;
++    while i < code.len() {
++        let opcode = code[i];
++        skeleton.push(opcode);
++        i += 1;
++        if (op::PUSH1..=op::PUSH32).contains(&opcode) {
++            let n = (opcode - op::PUSH0) as usize;
++            let take = n.min(code.len().saturating_sub(i));
++            skeleton.extend(core::iter::repeat(0).take(take));
++            i += take;
++        }
++    }
++    skeleton
++}
++
++/// Strip the Solidity CBOR metadata trailer (if present) and trailing zero
++/// bytes, returning the leading code region.
++pub fn strip_emse_suffixes(bytes: &[u8]) -> &[u8] {
++    strip_trailing_zeroes(strip_solidity_cbor_metadata(bytes))
++}
++
++fn strip_solidity_cbor_metadata(bytes: &[u8]) -> &[u8] {
++    if bytes.len() < 2 {
++        return bytes;
++    }
++    let metadata_len =
++        u16::from_be_bytes([bytes[bytes.len() - 2], bytes[bytes.len() - 1]]) as usize;
++    if metadata_len == 0 || bytes.len() < metadata_len + 2 {
++        return bytes;
++    }
++    let metadata_start = bytes.len() - 2 - metadata_len;
++    let metadata = &bytes[metadata_start..bytes.len() - 2];
++    if looks_like_solidity_cbor_metadata(metadata) {
++        &bytes[..metadata_start]
++    } else {
++        bytes
++    }
++}
++
++fn strip_trailing_zeroes(bytes: &[u8]) -> &[u8] {
++    let mut end = bytes.len();
++    while end > 0 && bytes[end - 1] == 0 {
++        end -= 1;
++    }
++    &bytes[..end]
++}
++
++fn looks_like_solidity_cbor_metadata(metadata: &[u8]) -> bool {
++    if metadata.is_empty() {
++        return false;
++    }
++    let first = metadata[0];
++    let is_cbor_map = (first & 0xe0) == 0xa0 || first == 0xbf;
++    is_cbor_map
++        && ["ipfs", "bzzr0", "bzzr1", "solc", "experimental"]
++            .iter()
++            .any(|key| cbor_text_key_appears(metadata, key.as_bytes()))
++}
++
++fn cbor_text_key_appears(metadata: &[u8], key: &[u8]) -> bool {
++    if key.len() >= 24 {
++        return false;
++    }
++    let mut encoded = Vec::with_capacity(key.len() + 1);
++    encoded.push(0x60 | key.len() as u8);
++    encoded.extend_from_slice(key);
++    metadata.windows(encoded.len()).any(|window| window == encoded.as_slice())
++}
++
++/// Admission guard g1 (skeleton-level): `true` if execution could reach the
++/// physical end of the stripped code region and fall through into the
++/// stripped suffix.
++///
++/// Reachability argument (no full CFG needed): control reaches a byte
++/// position only via sequential flow or a jump. Sequential flow cannot pass
++/// the last flow-blocking instruction (STOP / RETURN / REVERT / INVALID /
++/// JUMP / SELFDESTRUCT), and a jump needs a valid JUMPDEST at an
++/// instruction boundary. Hence the region after the last blocker — and with
++/// it the physical end — is unreachable iff that region contains no
++/// boundary JUMPDEST. Embedded data tails (e.g. Solidity revert strings)
++/// therefore pass, unless the data happens to contain 0x5b ('[') at an
++/// instruction boundary, in which case the EVM itself would accept a jump
++/// there and we conservatively reject. No blocker at all (includes empty
++/// input) is fall-through. A truncated trailing PUSH inside an unreachable
++/// region is harmless (never executed); with no blocker before it, the
++/// no-blocker rule already rejects.
++pub fn tail_can_fall_through(code: &[u8]) -> bool {
++    let mut saw_blocker = false;
++    let mut jumpdest_after_blocker = false;
++    let mut i = 0;
++    while i < code.len() {
++        let opcode = code[i];
++        i += 1;
++        if (op::PUSH1..=op::PUSH32).contains(&opcode) {
++            i += (opcode - op::PUSH0) as usize;
++        }
++        match opcode {
++            op::STOP | op::RETURN | op::REVERT | op::INVALID | op::JUMP | op::SELFDESTRUCT => {
++                saw_blocker = true;
++                jumpdest_after_blocker = false;
++            }
++            op::JUMPDEST => jumpdest_after_blocker = true,
++            _ => {}
++        }
++    }
++    !saw_blocker || jumpdest_after_blocker
++}
++
++/// Admission guard g2 (member-level): `true` if the member's stripped suffix
++/// (`full[stripped_len..]`) contains a byte `0x5b` that the full bytecode's
++/// jump analysis would mark as a valid JUMPDEST (i.e. at an instruction
++/// boundary, not inside a PUSH immediate).
++///
++/// Such a member could legally be jumped into its stripped region, so it
++/// must not execute under a skeleton compiled from the stripped view.
++pub fn stripped_suffix_has_jumpdest(full: &[u8], stripped_len: usize) -> bool {
++    let mut i = 0;
++    while i < full.len() {
++        let opcode = full[i];
++        if i >= stripped_len && opcode == op::JUMPDEST {
++            return true;
++        }
++        i += 1;
++        if (op::PUSH1..=op::PUSH32).contains(&opcode) {
++            i += (opcode - op::PUSH0) as usize;
++        }
++    }
++    false
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn with_metadata(mut code: Vec<u8>, metadata: &[u8]) -> Vec<u8> {
++        code.extend_from_slice(metadata);
++        code.extend_from_slice(&(metadata.len() as u16).to_be_bytes());
++        code
++    }
++
++    const SOLC_METADATA: [u8; 10] = [0xa1, 0x64, b's', b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x11];
++
++    #[test]
++    fn strips_matching_solidity_cbor_metadata() {
++        let bytecode = with_metadata(vec![0x60, 0x2a, 0x01], &SOLC_METADATA);
++        assert_eq!(extract_emse_skeleton(&bytecode), vec![0x60, 0x00, 0x01]);
++    }
++
++    #[test]
++    fn keeps_non_matching_metadata_like_tail() {
++        let bytecode = with_metadata(vec![0x60, 0x2a, 0x01], &[0xa1, 0x63, b'f', b'o', b'o', 0x01]);
++        let skeleton = extract_emse_skeleton(&bytecode);
++        assert_eq!(&skeleton[..3], &[0x60, 0x00, 0x01]);
++        assert_eq!(skeleton.len(), bytecode.len());
++    }
++
++    #[test]
++    fn strips_trailing_zeroes_after_metadata_removal() {
++        assert_eq!(extract_emse_skeleton(&[0x60, 0x2a, 0x01, 0x00, 0x00]), vec![0x60, 0x00, 0x01]);
++    }
++
++    #[test]
++    fn strip_emse_suffixes_matches_skeleton_code_view() {
++        let bytecode = with_metadata(vec![0x60, 0x2a, 0x01, 0x00, 0x00], &SOLC_METADATA);
++        assert_eq!(strip_emse_suffixes(&bytecode), &[0x60, 0x2a, 0x01]);
++    }
++
++    #[test]
++    fn metadata_length_differing_members_share_skeleton() {
++        // Same logic prefix, metadata trailers of different lengths: the raw
++        // bytecodes differ in length yet must yield identical EMSE skeletons.
++        let logic = vec![0x60, 0x2a, 0x60, 0x00, 0x52, 0x60, 0x20, 0x60, 0x00, 0xf3];
++        let long_metadata = [
++            0xa2, 0x64, b'i', b'p', b'f', b's', 0x58, 0x22, 0x12, 0x20, 0x88, 0x99, 0x64, b's',
++            b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x1f,
++        ];
++        let a = with_metadata(logic.clone(), &SOLC_METADATA);
++        let b = with_metadata(logic.clone(), &long_metadata);
++        assert_ne!(a.len(), b.len());
++        assert_eq!(extract_emse_skeleton(&a), extract_emse_skeleton(&b));
++        assert_eq!(extract_emse_skeleton(&a), extract_emse_skeleton(&logic));
++    }
++
++    #[test]
++    fn eip1167_minimal_proxy_variants_share_skeleton() {
++        let proxy_a = hex_literal::hex!(
++            "363d3d373d3d3d363d7311111111111111111111111111111111111111115af43d82803e903d91602b57fd5bf3"
++        );
++        let proxy_b = hex_literal::hex!(
++            "363d3d373d3d3d363d7322222222222222222222222222222222222222225af43d82803e903d91602b57fd5bf3"
++        );
++        assert_eq!(extract_emse_skeleton(&proxy_a), extract_emse_skeleton(&proxy_b));
++        assert_eq!(extract_emse_skeleton(&proxy_a).len(), 45);
++    }
++
++    #[test]
++    fn fallthrough_guard_proves_data_tail_unreachable() {
++        // REVERT blocks sequential flow; the embedded revert-string data
++        // after it contains no boundary JUMPDEST, so the physical end is
++        // provably unreachable — admissible even though scanning the data
++        // ends in a truncated PUSH.
++        let mut code = vec![0x60, 0x2a, op::REVERT];
++        code.extend_from_slice(b"insufficient balance");
++        assert!(!tail_can_fall_through(&code));
++    }
++
++    #[test]
++    fn fallthrough_guard_rejects_jumpdest_after_last_blocker() {
++        // A boundary 0x5b after the last blocker is a valid EVM jump target,
++        // so the tail region stays reachable — reject.
++        assert!(tail_can_fall_through(&[0x60, 0x2a, op::REVERT, 0x5b]));
++        // '[' (0x5b) at an instruction boundary inside string data: same.
++        let mut code = vec![0x60, 0x2a, op::REVERT];
++        code.extend_from_slice(b"abc[def");
++        assert!(tail_can_fall_through(&code));
++    }
++
++    #[test]
++    fn fallthrough_guard_accepts_terminated_tails() {
++        for terminator in [op::STOP, op::RETURN, op::REVERT, op::INVALID, op::JUMP, op::SELFDESTRUCT]
++        {
++            assert!(
++                !tail_can_fall_through(&[0x60, 0x2a, terminator]),
++                "terminator {terminator:#04x} must not be fall-through"
++            );
++        }
++    }
++
++    #[test]
++    fn fallthrough_guard_rejects_open_tails() {
++        // ADD at the end: execution runs off the stripped region.
++        assert!(tail_can_fall_through(&[0x60, 0x2a, 0x01]));
++        // JUMPI can fall through.
++        assert!(tail_can_fall_through(&[0x60, 0x00, 0x60, 0x04, 0x57]));
++        // Trailing PUSH with truncated immediate.
++        assert!(tail_can_fall_through(&[0x61, 0x12]));
++        // Empty region.
++        assert!(tail_can_fall_through(&[]));
++        // Trailing 0x00 inside a PUSH immediate is data, not STOP.
++        assert!(tail_can_fall_through(&[0x60, 0x00]));
++    }
++
++    fn b256(byte: u8) -> B256 {
++        B256::repeat_byte(byte)
++    }
++
++    fn contracts_of(entries: &[(B256, Vec<u8>)]) -> HashMap<B256, Vec<u8>> {
++        entries.iter().cloned().collect()
++    }
++
++    // PUSH1 imm; PUSH1 0; MSTORE; PUSH1 32; PUSH1 0; RETURN — terminated tail.
++    fn terminated_logic(imm: u8) -> Vec<u8> {
++        vec![0x60, imm, 0x60, 0x00, 0x52, 0x60, 0x20, 0x60, 0x00, 0xf3]
++    }
++
++    #[test]
++    fn metadata_length_differing_members_group_under_emse_only() {
++        let long_metadata = [
++            0xa2, 0x64, b'i', b'p', b'f', b's', 0x58, 0x22, 0x12, 0x20, 0x88, 0x99, 0x64, b's',
++            b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x1f,
++        ];
++        let a = with_metadata(terminated_logic(0x11), &SOLC_METADATA);
++        let b = with_metadata(terminated_logic(0x22), &long_metadata);
++        assert_ne!(a.len(), b.len());
++        let contracts = contracts_of(&[(b256(1), a), (b256(2), b)]);
++
++        let current = group_skeleton_families(&contracts, SkeletonMode::Current);
++        assert!(current.families.is_empty(), "raw lengths differ; no family under Current");
++        assert_eq!(current.per_hash.len(), 2);
++
++        let emse = group_skeleton_families(&contracts, SkeletonMode::Emse);
++        assert_eq!(emse.families.len(), 1);
++        assert_eq!(emse.families[0].members, vec![b256(1), b256(2)]);
++        assert!(emse.per_hash.is_empty());
++        assert_eq!(emse.stats, GroupingStats::default());
++    }
++
++    #[test]
++    fn g1_rejects_fallthrough_skeleton_families() {
++        // Tail ends in ADD: falls through into the stripped metadata region.
++        let open_logic = vec![0x60, 0x2a, 0x01];
++        let a = with_metadata(open_logic.clone(), &SOLC_METADATA);
++        let b = with_metadata(
++            open_logic.clone(),
++            &[
++                0xa2, 0x64, b'i', b'p', b'f', b's', 0x58, 0x22, 0x12, 0x20, 0x88, 0x99, 0x64,
++                b's', b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x1f,
++            ],
++        );
++        let contracts = contracts_of(&[(b256(1), a), (b256(2), b)]);
++        let emse = group_skeleton_families(&contracts, SkeletonMode::Emse);
++        assert!(emse.families.is_empty());
++        assert_eq!(emse.per_hash.len(), 2);
++        assert_eq!(emse.stats.g1_rejected_skeletons, 1);
++        assert_eq!(emse.stats.g1_rejected_members, 2);
++        assert_eq!(emse.stats.g2_rejected_members, 0);
++    }
++
++    #[test]
++    fn g2_rejects_members_with_jumpdest_in_stripped_suffix() {
++        // Poisoned trailer: still recognized as Solidity CBOR metadata, but
++        // scanning past the logic tail lands on an instruction-boundary
++        // JUMPDEST (0xa1 = LOG1, then 0x5b).
++        let poisoned = [0xa1, 0x5b, 0x64, b's', b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x11];
++        let a = with_metadata(terminated_logic(0x11), &SOLC_METADATA);
++        let b = with_metadata(terminated_logic(0x22), &SOLC_METADATA);
++        let c = with_metadata(terminated_logic(0x33), &poisoned);
++        assert!(stripped_suffix_has_jumpdest(
++            &with_metadata(terminated_logic(0x33), &poisoned),
++            terminated_logic(0x33).len()
++        ));
++        let contracts = contracts_of(&[(b256(1), a), (b256(2), b), (b256(3), c)]);
++        let emse = group_skeleton_families(&contracts, SkeletonMode::Emse);
++        assert_eq!(emse.families.len(), 1);
++        if ENFORCE_G2 {
++            assert_eq!(emse.families[0].members, vec![b256(1), b256(2)]);
++            assert_eq!(emse.per_hash, vec![b256(3)]);
++            assert_eq!(emse.stats.g2_rejected_members, 1);
++        } else {
++            // Hardened interpreter semantics: metadata JUMPDESTs can never be
++            // taken on either side, so the poisoned member stays shareable.
++            assert_eq!(emse.families[0].members, vec![b256(1), b256(2), b256(3)]);
++            assert!(emse.per_hash.is_empty());
++            assert_eq!(emse.stats.g2_rejected_members, 0);
++        }
++        assert_eq!(emse.stats.g1_rejected_skeletons, 0);
++    }
++
++    #[test]
++    fn hash_bucket_collisions_split_by_skeleton_bytes() {
++        // Real 64-bit collisions cannot be constructed here; exercise the
++        // bucket-splitting helper directly with two distinct skeletons.
++        let subgroups = split_by_skeleton(vec![
++            (b256(1), vec![0x60, 0x00, 0xf3]),
++            (b256(2), vec![0x60, 0x00, 0x00]),
++            (b256(3), vec![0x60, 0x00, 0xf3]),
++        ]);
++        assert_eq!(subgroups.len(), 2);
++        assert_eq!(subgroups[0].1, vec![b256(1), b256(3)]);
++        assert_eq!(subgroups[1].1, vec![b256(2)]);
++        // Salted rehash stays deterministic and differs from the plain hash.
++        let skel = vec![0x60u8, 0x00, 0xf3];
++        assert_ne!(salted_hash(&skel, 1), hash_bytes(&skel));
++        assert_eq!(salted_hash(&skel, 1), salted_hash(&skel, 1));
++    }
++
++    #[test]
++    fn emse_family_data_table_roundtrips_member_immediates() {
++        use crate::skeleton::{analyze_skeleton_group, build_data_table, PushClassification};
++
++        let long_metadata = [
++            0xa2, 0x64, b'i', b'p', b'f', b's', 0x58, 0x22, 0x12, 0x20, 0x88, 0x99, 0x64, b's',
++            b'o', b'l', b'c', 0x43, 0x00, 0x08, 0x1f,
++        ];
++        let a = with_metadata(terminated_logic(0x11), &SOLC_METADATA);
++        let b = with_metadata(terminated_logic(0x22), &long_metadata);
++        let contracts = contracts_of(&[(b256(1), a.clone()), (b256(2), b.clone())]);
++        let emse = group_skeleton_families(&contracts, SkeletonMode::Emse);
++        assert_eq!(emse.families.len(), 1);
++
++        // Callers strip first: variance over stripped views, tables from
++        // stripped members.
++        let views: Vec<&[u8]> = emse.families[0]
++            .members
++            .iter()
++            .map(|m| bytecode_view(&contracts[m], SkeletonMode::Emse))
++            .collect();
++        let variance = analyze_skeleton_group(&views);
++        assert_eq!(variance.num_variant, 1, "only the first PUSH immediate differs");
++        assert_eq!(variance.pushes[0], PushClassification::Variant { table_index: 0 });
++
++        let table_a = build_data_table(bytecode_view(&a, SkeletonMode::Emse), &variance);
++        let table_b = build_data_table(bytecode_view(&b, SkeletonMode::Emse), &variance);
++        assert_eq!(table_a.data[0], 0x11);
++        assert_eq!(table_b.data[0], 0x22);
++        assert_eq!(table_a.data[1..32], [0u8; 31]);
++    }
++
++    #[test]
++    fn jumpdest_guard_detects_real_jumpdest_in_suffix() {
++        // STOP | JUMPDEST — the suffix byte is a valid JUMPDEST.
++        assert!(stripped_suffix_has_jumpdest(&[0x00, 0x5b], 1));
++        // PUSH1 0x5b — the suffix byte is immediate data, not a JUMPDEST.
++        assert!(!stripped_suffix_has_jumpdest(&[0x60, 0x5b], 1));
++        // 0x5b bytes covered by a PUSH4 immediate that starts before the
++        // boundary must not count.
++        assert!(!stripped_suffix_has_jumpdest(&[0x60, 0x00, 0x63, 0x5b, 0x5b, 0x5b, 0x5b, 0x00], 3));
++        // ...but an instruction-boundary JUMPDEST after that immediate does.
++        assert!(stripped_suffix_has_jumpdest(&[0x60, 0x00, 0x63, 0x5b, 0x5b, 0x5b, 0x5b, 0x5b], 3));
++        // No suffix at all.
++        assert!(!stripped_suffix_has_jumpdest(&[0x00, 0x5b], 2));
++    }
++}
+diff --git a/crates/revmc/src/lib.rs b/crates/revmc/src/lib.rs
+index 010d7a66..fa234c0d 100644
+--- a/crates/revmc/src/lib.rs
++++ b/crates/revmc/src/lib.rs
+@@ -12,6 +12,11 @@ use alloy_primitives as _;
+ mod bytecode;
+ pub use bytecode::*;
+ 
++pub mod emse;
++pub mod profile;
++pub mod skeleton;
++pub(crate) mod skeleton_admission;
++
+ mod compiler;
+ pub use compiler::{EvmCompiler, EvmCompilerInput};
+ 
+diff --git a/crates/revmc/src/linker.rs b/crates/revmc/src/linker.rs
+index 4e1c1191..3acc3b1e 100644
+--- a/crates/revmc/src/linker.rs
++++ b/crates/revmc/src/linker.rs
+@@ -1,4 +1,17 @@
+ use std::path::{Path, PathBuf};
++use std::sync::OnceLock;
++
++fn has_lld() -> bool {
++    static AVAILABLE: OnceLock<bool> = OnceLock::new();
++    *AVAILABLE.get_or_init(|| {
++        std::process::Command::new("lld")
++            .arg("--version")
++            .stdout(std::process::Stdio::null())
++            .stderr(std::process::Stdio::null())
++            .status()
++            .is_ok_and(|s| s.success())
++    })
++}
+ 
+ /// EVM bytecode compiler linker.
+ #[derive(Debug)]
+@@ -63,7 +76,7 @@ impl Linker {
+         cmd.arg("-O3");
+         if let Some(linker) = &self.linker {
+             cmd.arg(format!("-fuse-ld={}", linker.display()));
+-        } else if !cfg!(target_vendor = "apple") {
++        } else if !cfg!(target_vendor = "apple") && has_lld() {
+             cmd.arg("-fuse-ld=lld");
+         }
+         if cfg!(target_vendor = "apple") {
+diff --git a/crates/revmc/src/profile.rs b/crates/revmc/src/profile.rs
+new file mode 100644
+index 00000000..15ef47ac
+--- /dev/null
++++ b/crates/revmc/src/profile.rs
+@@ -0,0 +1,82 @@
++//! Branch profile data for PGO-guided compilation.
++
++use std::collections::HashMap;
++
++/// Branch profile for a single bytecode (keyed by bytecode PC).
++/// Each entry records how many times a JUMPI was taken vs not-taken.
++#[derive(Clone, Debug, Default)]
++pub struct BranchProfile {
++    /// Map from bytecode PC → (taken_count, not_taken_count).
++    pub branches: HashMap<u32, (u64, u64)>,
++}
++
++impl BranchProfile {
++    pub fn new() -> Self {
++        Self::default()
++    }
++
++    /// Record a branch outcome at the given PC.
++    pub fn record(&mut self, pc: u32, taken: bool) {
++        let entry = self.branches.entry(pc).or_insert((0, 0));
++        if taken {
++            entry.0 += 1;
++        } else {
++            entry.1 += 1;
++        }
++    }
++
++    /// Returns true if the taken direction is cold (< 20% of total).
++    /// Returns None if no profile data for this PC.
++    pub fn is_taken_cold(&self, pc: u32) -> Option<bool> {
++        self.branches.get(&pc).map(|&(taken, not_taken)| {
++            let total = taken + not_taken;
++            if total == 0 {
++                return false;
++            }
++            // "cold" = less than 20% of total executions
++            taken * 5 < total
++        })
++    }
++
++    /// Returns true if the not-taken direction is cold (< 20% of total).
++    pub fn is_not_taken_cold(&self, pc: u32) -> Option<bool> {
++        self.branches.get(&pc).map(|&(taken, not_taken)| {
++            let total = taken + not_taken;
++            if total == 0 {
++                return false;
++            }
++            not_taken * 5 < total
++        })
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn test_cold_detection() {
++        let mut p = BranchProfile::new();
++        // 100 taken, 5 not-taken -> not-taken is cold
++        p.record(10, true);
++        for _ in 0..99 { p.record(10, true); }
++        for _ in 0..5 { p.record(10, false); }
++
++        assert_eq!(p.is_taken_cold(10), Some(false));
++        assert_eq!(p.is_not_taken_cold(10), Some(true));
++
++        // No data for PC 99
++        assert_eq!(p.is_taken_cold(99), None);
++    }
++
++    #[test]
++    fn test_balanced_not_cold() {
++        let mut p = BranchProfile::new();
++        for _ in 0..50 { p.record(20, true); }
++        for _ in 0..50 { p.record(20, false); }
++
++        // 50/50 -- neither is cold
++        assert_eq!(p.is_taken_cold(20), Some(false));
++        assert_eq!(p.is_not_taken_cold(20), Some(false));
++    }
++}
+diff --git a/crates/revmc/src/skeleton.rs b/crates/revmc/src/skeleton.rs
+new file mode 100644
+index 00000000..f21e5e6f
+--- /dev/null
++++ b/crates/revmc/src/skeleton.rs
+@@ -0,0 +1,496 @@
++//! Skeleton-aware compilation support: variance classification and data table construction.
++//!
++//! An opcode skeleton is a bytecode with PUSH immediate bytes stripped.
++//! Contracts sharing the same skeleton can use a single compiled function,
++//! with variant PUSH values loaded from a per-instance data table at runtime.
++
++use revm_bytecode::opcode as op;
++use revm_primitives::U256;
++
++/// Classification of a single PUSH instruction within a skeleton.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum PushClassification {
++    /// Same value across all skeleton instances — compiled as `iconst_256`.
++    Invariant,
++    /// Different values across instances — loaded from data table at runtime.
++    /// `table_index` is the variant PUSH ordinal (0, 1, 2, ...).
++    /// Byte offset into the data table = `table_index * 32`.
++    Variant {
++        /// The variant PUSH ordinal (0, 1, 2, ...).
++        table_index: u32,
++    },
++}
++
++/// Variance map for an opcode skeleton.
++/// One entry per PUSH1..PUSH32 instruction, in opcode order.
++/// PUSH0 is excluded (value is always 0, always invariant).
++#[derive(Clone, Debug)]
++pub struct SkeletonVariance {
++    /// Classification of each PUSH1..PUSH32, in opcode order.
++    pub pushes: Vec<PushClassification>,
++    /// Total number of variant PUSHes.
++    pub num_variant: u32,
++}
++
++/// Per-instance data table: contiguous array of 32-byte LE i256 values,
++/// one entry per variant PUSH. Layout: `[variant_0: [u8; 32], variant_1: [u8; 32], ...]`.
++#[derive(Debug)]
++pub struct ImmDataTable {
++    /// Raw bytes: length = num_variant_pushes * 32.
++    pub data: Vec<u8>,
++}
++
++/// Classification mode for [`analyze_skeleton_group_with_mode`].
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum ClassifyMode {
++    /// Default: compare across instances; only differing PUSHes become Variant.
++    Auto,
++    /// Ablation: mark every non-PUSH0 as Variant regardless of cross-instance equality.
++    /// Disables LLVM constant folding over PUSH immediates while keeping skeleton sharing.
++    ForceAllVariant,
++}
++
++impl ClassifyMode {
++    /// Stable tag used in CLI flags, logs, and cache-file names.
++    pub fn as_str(self) -> &'static str {
++        match self {
++            ClassifyMode::Auto => "auto",
++            ClassifyMode::ForceAllVariant => "force-all-variant",
++        }
++    }
++}
++
++impl core::str::FromStr for ClassifyMode {
++    type Err = String;
++
++    fn from_str(s: &str) -> Result<Self, Self::Err> {
++        match s {
++            "auto" => Ok(ClassifyMode::Auto),
++            "force-all-variant" => Ok(ClassifyMode::ForceAllVariant),
++            other => {
++                Err(format!("unknown classify mode '{other}', expected auto|force-all-variant"))
++            }
++        }
++    }
++}
++
++/// Analyze a group of bytecodes sharing the same opcode skeleton.
++/// Compares PUSH1..PUSH32 immediates across all instances to classify each as
++/// Invariant (same value everywhere) or Variant (differs in at least one instance).
++///
++/// # Panics
++/// - If `bytecodes` is empty.
++/// - If bytecodes don't share the same opcode skeleton (different PUSH counts).
++pub fn analyze_skeleton_group(bytecodes: &[&[u8]]) -> SkeletonVariance {
++    analyze_skeleton_group_with_mode(bytecodes, ClassifyMode::Auto)
++}
++
++/// Variant of [`analyze_skeleton_group`] parameterized by [`ClassifyMode`].
++///
++/// # Panics
++/// Same panic conditions as [`analyze_skeleton_group`].
++pub fn analyze_skeleton_group_with_mode(
++    bytecodes: &[&[u8]],
++    mode: ClassifyMode,
++) -> SkeletonVariance {
++    assert!(!bytecodes.is_empty(), "need at least one bytecode");
++
++    let reference = bytecodes[0];
++    let ref_pushes = extract_push_immediates(reference);
++
++    let mut is_variant = vec![false; ref_pushes.len()];
++    for &bytecode in &bytecodes[1..] {
++        let pushes = extract_push_immediates(bytecode);
++        assert_eq!(
++            pushes.len(),
++            ref_pushes.len(),
++            "bytecodes have different number of PUSH instructions"
++        );
++        if mode == ClassifyMode::Auto {
++            for (i, (ref_imm, imm)) in ref_pushes.iter().zip(pushes.iter()).enumerate() {
++                if ref_imm != imm {
++                    is_variant[i] = true;
++                }
++            }
++        }
++    }
++    if mode == ClassifyMode::ForceAllVariant {
++        let skip_logic = skip_logic_push_mask(reference);
++        // Hard assert, not debug_assert: the indexing below would otherwise
++        // become an out-of-bounds abort in release with no diagnosis.
++        assert_eq!(skip_logic.len(), ref_pushes.len());
++        for (i, v) in is_variant.iter_mut().enumerate() {
++            *v = !skip_logic[i];
++        }
++    }
++
++    let mut num_variant = 0u32;
++    let pushes = is_variant
++        .iter()
++        .map(|&variant| {
++            if variant {
++                let idx = num_variant;
++                num_variant += 1;
++                PushClassification::Variant { table_index: idx }
++            } else {
++                PushClassification::Invariant
++            }
++        })
++        .collect();
++
++    SkeletonVariance { pushes, num_variant }
++}
++
++/// Build a per-instance data table from a specific bytecode and its variance map.
++/// Each variant PUSH value is stored as 32-byte little-endian i256.
++pub fn build_data_table(bytecode: &[u8], variance: &SkeletonVariance) -> ImmDataTable {
++    let pushes = extract_push_immediates(bytecode);
++    assert_eq!(
++        pushes.len(),
++        variance.pushes.len(),
++        "variance map doesn't match bytecode PUSH count"
++    );
++
++    let mut data = vec![0u8; variance.num_variant as usize * 32];
++    for ((declared_len, imm), classification) in pushes.iter().zip(variance.pushes.iter()) {
++        if let PushClassification::Variant { table_index } = classification {
++            let offset = *table_index as usize * 32;
++            let le_bytes = normalize_push_immediate(imm, *declared_len);
++            data[offset..offset + 32].copy_from_slice(&le_bytes);
++        }
++    }
++
++    ImmDataTable { data }
++}
++
++/// Normalize a PUSH immediate to its 32-byte LE runtime value.
++///
++/// `declared_len` is the PUSH opcode's declared width. When the immediate is
++/// truncated by the physical end of code, the EVM reads the missing bytes as
++/// zero — i.e. the value is zero-extended on the RIGHT (low side), so the
++/// present bytes must be shifted up to their declared positions.
++pub(crate) fn normalize_push_immediate(imm: &[u8], declared_len: usize) -> [u8; 32] {
++    let missing = declared_len.saturating_sub(imm.len());
++    (U256::from_be_slice(imm) << (8 * missing)).to_le_bytes::<32>()
++}
++
++/// Mask of PUSH1..PUSH32 instructions whose immediate is baked into a static
++/// JUMP/JUMPI (what the bytecode analysis would mark as `SKIP_LOGIC`). The mask
++/// is indexed by PUSH ordinal, matching [`extract_push_immediates`] (PUSH0 is
++/// skipped). A `true` entry means the PUSH's value is consumed by an adjacent
++/// `JUMP` or `JUMPI`, so classifying it as Variant would invalidate the
++/// static-jump resolution done by the backend.
++///
++/// Target validity is deliberately NOT required. An invalid target makes the
++/// backend emit an unconditional `InvalidJump` trap instead of folding the
++/// branch, which is equally incompatible with a runtime table lookup — and
++/// worse, produces no assert, so the mismatch would be silent.
++pub fn skip_logic_push_mask(bytecode: &[u8]) -> Vec<bool> {
++    // Mark PUSH<N> at ordinal k iff it is immediately followed by JUMP/JUMPI
++    // and the immediate fits in a usize (wider immediates cannot be a PC, and
++    // the backend's own analysis rejects them the same way).
++    let mut mask = Vec::new();
++    let mut i = 0usize;
++    while i < bytecode.len() {
++        let op_byte = bytecode[i];
++        if op_byte >= op::PUSH1 && op_byte <= op::PUSH32 {
++            let n = (op_byte - op::PUSH0) as usize;
++            let imm_start = i + 1;
++            let imm_end = (imm_start + n).min(bytecode.len());
++            let jump_pc = imm_end;
++            let mut is_skip = false;
++            if jump_pc < bytecode.len() && n <= std::mem::size_of::<usize>() {
++                let jump_op = bytecode[jump_pc];
++                if jump_op == op::JUMP || jump_op == op::JUMPI {
++                    is_skip = true;
++                }
++            }
++            mask.push(is_skip);
++            i = imm_end;
++        } else {
++            i += 1;
++        }
++    }
++    mask
++}
++
++/// `true` if any Variant-classified PUSH feeds an adjacent static JUMP/JUMPI
++/// (`skip_logic_push_mask`): the backend folds such jumps to compile-time
++/// targets, which is incompatible with a runtime table lookup —
++/// `apply_variance` asserts on the combination. Families where members
++/// genuinely jump to different targets must be degraded to per-member
++/// compilation by the caller.
++pub fn variance_conflicts_static_jumps(reference: &[u8], variance: &SkeletonVariance) -> bool {
++    let skip = skip_logic_push_mask(reference);
++    // Hard assert: a silent zip truncation here would reopen the
++    // apply_variance abort this pre-check exists to prevent.
++    assert_eq!(skip.len(), variance.pushes.len());
++    variance
++        .pushes
++        .iter()
++        .zip(skip.iter())
++        .any(|(p, s)| *s && matches!(p, PushClassification::Variant { .. }))
++}
++
++/// `true` if this family cannot share one artifact because a PUSH consumed by
++/// an adjacent static JUMP/JUMPI differs between members.
++///
++/// Answered from the member bytecodes rather than from an existing
++/// [`SkeletonVariance`], because [`ClassifyMode::ForceAllVariant`] forces
++/// exactly those PUSHes back to Invariant — so
++/// [`variance_conflicts_static_jumps`] applied to a ForceAllVariant variance
++/// answers `false` for every family, whatever the members contain. Callers
++/// must use this one when the run's classify mode is not fixed to `Auto`.
++pub fn members_conflict_static_jumps(bytecodes: &[&[u8]]) -> bool {
++    if bytecodes.len() < 2 {
++        return false;
++    }
++    let auto = analyze_skeleton_group_with_mode(bytecodes, ClassifyMode::Auto);
++    variance_conflicts_static_jumps(bytecodes[0], &auto)
++}
++
++/// Extract the opcode skeleton: all opcodes kept, PUSH1..PUSH32 immediate
++/// bytes removed.
++pub fn extract_opcode_skeleton(bytecode: &[u8]) -> Vec<u8> {
++    let mut skeleton = Vec::with_capacity(bytecode.len());
++    let mut i = 0;
++    while i < bytecode.len() {
++        let op_byte = bytecode[i];
++        skeleton.push(op_byte);
++        i += 1;
++        if op_byte >= op::PUSH1 && op_byte <= op::PUSH32 {
++            i += (op_byte - op::PUSH0) as usize;
++        }
++    }
++    skeleton
++}
++
++/// Extract PUSH1..PUSH32 immediates as `(declared_len, bytes)` pairs, in
++/// opcode order. `bytes` is shorter than `declared_len` only for a PUSH
++/// truncated by the physical end of code. Skips PUSH0 (no immediate bytes,
++/// always zero).
++pub fn extract_push_immediates(bytecode: &[u8]) -> Vec<(usize, &[u8])> {
++    let mut result = Vec::new();
++    let mut i = 0;
++    while i < bytecode.len() {
++        let op_byte = bytecode[i];
++        i += 1;
++        if op_byte >= op::PUSH1 && op_byte <= op::PUSH32 {
++            let n = (op_byte - op::PUSH0) as usize;
++            let end = (i + n).min(bytecode.len());
++            result.push((n, &bytecode[i..end]));
++            i = end;
++        }
++    }
++    result
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn test_all_invariant() {
++        let bc = &[0x60, 0x42, 0x61, 0x00, 0x01, 0x00];
++        let variance = analyze_skeleton_group(&[bc, bc]);
++        assert_eq!(variance.pushes.len(), 2);
++        assert_eq!(variance.pushes[0], PushClassification::Invariant);
++        assert_eq!(variance.pushes[1], PushClassification::Invariant);
++        assert_eq!(variance.num_variant, 0);
++    }
++
++    #[test]
++    fn test_one_variant() {
++        let bc1 = &[0x60, 0x42, 0x60, 0x01, 0x00];
++        let bc2 = &[0x60, 0x42, 0x60, 0x02, 0x00];
++        let variance = analyze_skeleton_group(&[bc1, bc2]);
++        assert_eq!(variance.pushes.len(), 2);
++        assert_eq!(variance.pushes[0], PushClassification::Invariant);
++        assert_eq!(variance.pushes[1], PushClassification::Variant { table_index: 0 });
++        assert_eq!(variance.num_variant, 1);
++    }
++
++    #[test]
++    fn test_build_data_table() {
++        let bc1 = &[0x60, 0x42, 0x60, 0x01, 0x00];
++        let bc2 = &[0x60, 0x42, 0x60, 0x02, 0x00];
++        let variance = analyze_skeleton_group(&[bc1, bc2]);
++
++        let table1 = build_data_table(bc1, &variance);
++        assert_eq!(table1.data.len(), 32);
++        assert_eq!(table1.data[0], 0x01);
++        assert_eq!(table1.data[1..32], [0u8; 31]);
++
++        let table2 = build_data_table(bc2, &variance);
++        assert_eq!(table2.data[0], 0x02);
++    }
++
++    #[test]
++    fn test_push32_variant() {
++        let mut bc1 = vec![0x7f];
++        bc1.extend_from_slice(&[0xff; 32]);
++        bc1.push(0x00);
++
++        let mut bc2 = vec![0x7f];
++        bc2.extend_from_slice(&[0xaa; 32]);
++        bc2.push(0x00);
++
++        let variance = analyze_skeleton_group(&[&bc1, &bc2]);
++        assert_eq!(variance.num_variant, 1);
++
++        let table = build_data_table(&bc1, &variance);
++        assert!(table.data.iter().all(|&b| b == 0xff));
++    }
++
++    #[test]
++    fn test_normalize_push_immediate_matches_build_data_table_semantics() {
++        let mut bc = vec![0x60, 0x2a, 0x7f];
++        bc.extend_from_slice(&[0xff; 32]);
++
++        let pushes = extract_push_immediates(&bc);
++        let a = normalize_push_immediate(pushes[0].1, pushes[0].0);
++        let b = normalize_push_immediate(pushes[1].1, pushes[1].0);
++
++        assert_eq!(a[0], 0x2a);
++        assert_eq!(a[1..], [0u8; 31]);
++        assert_eq!(b, [0xff; 32]);
++    }
++
++    #[test]
++    fn test_truncated_push_immediate_zero_extends_right() {
++        // PUSH2 with only one immediate byte present: the EVM reads the
++        // missing byte as zero, so the value is 0xAB00, not 0x00AB.
++        let bc = &[0x61, 0xAB];
++        let pushes = extract_push_immediates(bc);
++        assert_eq!(pushes, vec![(2usize, &bc[1..2])]);
++        let le = normalize_push_immediate(pushes[0].1, pushes[0].0);
++        assert_eq!(le[0], 0x00);
++        assert_eq!(le[1], 0xAB);
++        assert_eq!(le[2..], [0u8; 30]);
++
++        // End-to-end through the data table with two differing members.
++        let bc1 = &[0x61, 0xAB];
++        let bc2 = &[0x61, 0xCD];
++        let variance = analyze_skeleton_group(&[bc1, bc2]);
++        assert_eq!(variance.num_variant, 1);
++        let table = build_data_table(bc1, &variance);
++        assert_eq!(table.data[0], 0x00);
++        assert_eq!(table.data[1], 0xAB);
++    }
++
++    #[test]
++    fn test_singleton_all_invariant() {
++        let bc = &[0x60, 0x42, 0x60, 0x01, 0x00];
++        let variance = analyze_skeleton_group(&[bc]);
++        assert_eq!(variance.num_variant, 0);
++        assert!(variance.pushes.iter().all(|p| *p == PushClassification::Invariant));
++    }
++
++    #[test]
++    fn test_force_all_variant_marks_every_non_push0_as_variant() {
++        let bc = &[0x5f, 0x60, 0x42, 0x61, 0x00, 0x01, 0x00];
++
++        let auto = analyze_skeleton_group_with_mode(&[bc, bc], ClassifyMode::Auto);
++        assert_eq!(auto.num_variant, 0);
++
++        let forced = analyze_skeleton_group_with_mode(&[bc, bc], ClassifyMode::ForceAllVariant);
++        assert_eq!(forced.pushes.len(), 2);
++        assert_eq!(forced.pushes[0], PushClassification::Variant { table_index: 0 });
++        assert_eq!(forced.pushes[1], PushClassification::Variant { table_index: 1 });
++        assert_eq!(forced.num_variant, 2);
++    }
++
++    #[test]
++    fn test_force_all_variant_data_table_roundtrips_values() {
++        let bc1 = &[0x60, 0x42, 0x60, 0x01, 0x00];
++        let bc2 = &[0x60, 0x42, 0x60, 0x02, 0x00];
++        let variance = analyze_skeleton_group_with_mode(&[bc1, bc2], ClassifyMode::ForceAllVariant);
++        assert_eq!(variance.num_variant, 2);
++
++        let table = build_data_table(bc1, &variance);
++        assert_eq!(table.data.len(), 64);
++        assert_eq!(table.data[0], 0x42);
++        assert_eq!(table.data[32], 0x01);
++    }
++
++    #[test]
++    fn test_force_all_variant_preserves_skip_logic() {
++        // PUSH1 0x03, JUMP, JUMPDEST, STOP — JUMPDEST sits at PC 3, PUSH1 pushes
++        // 3, so the PUSH immediate is a valid static-jump target. Bytecode
++        // analysis would flag it SKIP_LOGIC, and ForceAllVariant must leave it
++        // Invariant to preserve static-jump folding.
++        let bc = &[0x60, 0x03, 0x56, 0x5b, 0x00];
++        let variance = analyze_skeleton_group_with_mode(&[bc, bc], ClassifyMode::ForceAllVariant);
++        assert_eq!(variance.pushes.len(), 1);
++        assert_eq!(variance.pushes[0], PushClassification::Invariant);
++        assert_eq!(variance.num_variant, 0);
++
++        // Add a second, non-SKIP_LOGIC PUSH1 — it must still be forced Variant.
++        // Layout: PUSH1 0x03, JUMP, JUMPDEST, PUSH1 0x42, STOP
++        let bc2 = &[0x60, 0x03, 0x56, 0x5b, 0x60, 0x42, 0x00];
++        let v2 = analyze_skeleton_group_with_mode(&[bc2, bc2], ClassifyMode::ForceAllVariant);
++        assert_eq!(v2.pushes.len(), 2);
++        assert_eq!(v2.pushes[0], PushClassification::Invariant);
++        assert_eq!(v2.pushes[1], PushClassification::Variant { table_index: 0 });
++        assert_eq!(v2.num_variant, 1);
++    }
++
++    #[test]
++    fn test_variance_conflicts_static_jumps_detection() {
++        // Members whose static-jump PUSH targets differ: PUSH1 <t>, JUMP,
++        // JUMPDEST@3, JUMPDEST@4, STOP. Both 3 and 4 are valid JUMPDESTs, so
++        // both members fold to static jumps, but Auto classifies the PUSH as
++        // Variant — exactly the combination apply_variance asserts on.
++        let a: &[u8] = &[0x60, 0x03, 0x56, 0x5b, 0x5b, 0x00];
++        let b: &[u8] = &[0x60, 0x04, 0x56, 0x5b, 0x5b, 0x00];
++        let variance = analyze_skeleton_group_with_mode(&[a, b], ClassifyMode::Auto);
++        assert_eq!(variance.num_variant, 1);
++        assert!(variance_conflicts_static_jumps(a, &variance));
++
++        // Same shape but identical targets: PUSH stays Invariant, no conflict.
++        let v_same = analyze_skeleton_group_with_mode(&[a, a], ClassifyMode::Auto);
++        assert!(!variance_conflicts_static_jumps(a, &v_same));
++
++        // Variant PUSH that does NOT feed a jump: no conflict.
++        let c: &[u8] = &[0x60, 0x41, 0x00];
++        let d: &[u8] = &[0x60, 0x42, 0x00];
++        let v_plain = analyze_skeleton_group_with_mode(&[c, d], ClassifyMode::Auto);
++        assert_eq!(v_plain.num_variant, 1);
++        assert!(!variance_conflicts_static_jumps(c, &v_plain));
++    }
++
++    #[test]
++    fn conflict_detected_when_reference_target_is_not_a_jumpdest() {
++        // PUSH1 <t>, JUMP, JUMPDEST@3, PUSH1 0, PUSH1 0, RETURN.
++        // The reference's target (2) is the JUMP byte itself, so the backend
++        // bakes an unconditional InvalidJump; member `b` needs a real jump to
++        // JUMPDEST@3. Requiring a VALID target here would miss the conflict and
++        // hand `b` an artifact that always halts.
++        let a: &[u8] = &[0x60, 0x02, 0x56, 0x5b, 0x60, 0x00, 0x60, 0x00, 0xf3];
++        let b: &[u8] = &[0x60, 0x03, 0x56, 0x5b, 0x60, 0x00, 0x60, 0x00, 0xf3];
++        assert!(members_conflict_static_jumps(&[a, b]));
++        assert!(members_conflict_static_jumps(&[b, a]), "must not depend on member order");
++    }
++
++    #[test]
++    fn force_all_variant_does_not_hide_a_static_jump_conflict() {
++        // ForceAllVariant pushes static-jump PUSHes back to Invariant, which
++        // makes `variance_conflicts_static_jumps` answer false for every
++        // family; the member-level check must still see the conflict.
++        let a: &[u8] = &[0x60, 0x03, 0x56, 0x5b, 0x5b, 0x00];
++        let b: &[u8] = &[0x60, 0x04, 0x56, 0x5b, 0x5b, 0x00];
++        let forced = analyze_skeleton_group_with_mode(&[a, b], ClassifyMode::ForceAllVariant);
++        assert!(!variance_conflicts_static_jumps(a, &forced));
++        assert!(members_conflict_static_jumps(&[a, b]));
++    }
++
++    #[test]
++    fn test_auto_wrapper_matches_prior_behavior() {
++        let bc1 = &[0x60, 0x42, 0x60, 0x01, 0x00];
++        let bc2 = &[0x60, 0x42, 0x60, 0x02, 0x00];
++        let via_wrapper = analyze_skeleton_group(&[bc1, bc2]);
++        let via_mode = analyze_skeleton_group_with_mode(&[bc1, bc2], ClassifyMode::Auto);
++        assert_eq!(via_wrapper.num_variant, via_mode.num_variant);
++        assert_eq!(via_wrapper.pushes, via_mode.pushes);
++    }
++}
+diff --git a/crates/revmc/src/skeleton_admission.rs b/crates/revmc/src/skeleton_admission.rs
+new file mode 100644
+index 00000000..4cb318ff
+--- /dev/null
++++ b/crates/revmc/src/skeleton_admission.rs
+@@ -0,0 +1,348 @@
++use crate::skeleton::{
++    ImmDataTable, PushClassification, SkeletonVariance, extract_push_immediates, normalize_push_immediate,
++};
++
++const ADMISSION_DESCRIPTOR_VERSION: u32 = 1;
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) struct AdmissionDescriptor {
++    descriptor_version: u32,
++    skeleton_fingerprint: u64,
++    variant_positions: Vec<u32>,
++    invariant_values: Vec<(u32, [u8; 32])>,
++}
++
++impl AdmissionDescriptor {
++    pub(crate) fn from_bytecode(
++        skeleton_fingerprint: u64,
++        bytecode: &[u8],
++        variance: &SkeletonVariance,
++    ) -> Self {
++        let descriptor_version = ADMISSION_DESCRIPTOR_VERSION;
++        let pushes = extract_push_immediates(bytecode);
++        assert_eq!(
++            pushes.len(),
++            variance.pushes.len(),
++            "variance map doesn't match bytecode PUSH count"
++        );
++
++        let mut variant_positions = Vec::new();
++        let mut invariant_values = Vec::new();
++
++        for (ordinal, ((declared_len, imm), classification)) in
++            pushes.iter().zip(variance.pushes.iter()).enumerate()
++        {
++            match classification {
++                PushClassification::Variant { .. } => variant_positions.push(ordinal as u32),
++                PushClassification::Invariant => {
++                    invariant_values
++                        .push((ordinal as u32, normalize_push_immediate(imm, *declared_len)));
++                }
++            }
++        }
++
++        Self {
++            descriptor_version,
++            skeleton_fingerprint,
++            variant_positions,
++            invariant_values,
++        }
++    }
++
++    pub(crate) fn validate(&self) -> Result<(), DescriptorError> {
++        if self.descriptor_version != ADMISSION_DESCRIPTOR_VERSION {
++            return Err(DescriptorError::UnsupportedVersion(self.descriptor_version));
++        }
++
++        if self.variant_positions.windows(2).any(|w| w[0] >= w[1]) {
++            return Err(DescriptorError::NonMonotonicOrdinals);
++        }
++        if self.invariant_values.windows(2).any(|w| w[0].0 >= w[1].0) {
++            return Err(DescriptorError::NonMonotonicOrdinals);
++        }
++
++        let mut vi = 0usize;
++        let mut ii = 0usize;
++        while vi < self.variant_positions.len() && ii < self.invariant_values.len() {
++            let v = self.variant_positions[vi];
++            let i = self.invariant_values[ii].0;
++            if v == i {
++                return Err(DescriptorError::OverlappingOrdinals { push_ordinal: v });
++            }
++            if v < i {
++                vi += 1;
++            } else {
++                ii += 1;
++            }
++        }
++
++        Ok(())
++    }
++}
++
++pub(crate) fn check_admission(
++    skeleton_fingerprint: u64,
++    candidate: &[u8],
++    descriptor: &AdmissionDescriptor,
++) -> Result<ImmDataTable, AdmissionError> {
++    descriptor.validate().map_err(AdmissionError::Descriptor)?;
++
++    if skeleton_fingerprint != descriptor.skeleton_fingerprint {
++        return Err(AdmissionError::Mismatch(
++            AdmissionMismatch::SkeletonFingerprintMismatch,
++        ));
++    }
++
++    let pushes = extract_push_immediates(candidate);
++    let get_push = |ordinal: u32| -> Result<(usize, &[u8]), AdmissionError> {
++        pushes.get(ordinal as usize).copied().ok_or(AdmissionError::Descriptor(
++            DescriptorError::OrdinalOutOfRange { push_ordinal: ordinal },
++        ))
++    };
++
++    for &(ordinal, expected) in &descriptor.invariant_values {
++        let (declared_len, imm) = get_push(ordinal)?;
++        let actual = normalize_push_immediate(imm, declared_len);
++        if actual != expected {
++            return Err(AdmissionError::Mismatch(AdmissionMismatch::InvariantMismatch {
++                push_ordinal: ordinal,
++                expected,
++                actual,
++            }));
++        }
++    }
++
++    let mut data = vec![0u8; descriptor.variant_positions.len() * 32];
++    for (table_index, &ordinal) in descriptor.variant_positions.iter().enumerate() {
++        let (declared_len, imm) = get_push(ordinal)?;
++        let value = normalize_push_immediate(imm, declared_len);
++        let offset = table_index * 32;
++        data[offset..offset + 32].copy_from_slice(&value);
++    }
++
++    Ok(ImmDataTable { data })
++}
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) enum AdmissionMismatch {
++    SkeletonFingerprintMismatch,
++    InvariantMismatch {
++        push_ordinal: u32,
++        expected: [u8; 32],
++        actual: [u8; 32],
++    },
++}
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) enum DescriptorError {
++    UnsupportedVersion(u32),
++    OverlappingOrdinals { push_ordinal: u32 },
++    NonMonotonicOrdinals,
++    OrdinalOutOfRange { push_ordinal: u32 },
++}
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) enum AdmissionError {
++    Descriptor(DescriptorError),
++    Mismatch(AdmissionMismatch),
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::skeleton::{analyze_skeleton_group, build_data_table};
++
++    #[test]
++    fn test_build_descriptor_records_variant_positions_and_invariants() {
++        let a = &[0x60, 0x11, 0x60, 0x01, 0x60, 0xaa, 0x00];
++        let b = &[0x60, 0x11, 0x60, 0x02, 0x60, 0xaa, 0x00];
++        let variance = analyze_skeleton_group(&[a, b]);
++
++        let descriptor = AdmissionDescriptor::from_bytecode(0xdead_beef, a, &variance);
++
++        assert_eq!(descriptor.descriptor_version, 1);
++        assert_eq!(descriptor.skeleton_fingerprint, 0xdead_beef);
++        assert_eq!(descriptor.variant_positions, vec![1]);
++        assert_eq!(descriptor.invariant_values.len(), 2);
++        assert_eq!(
++            descriptor.invariant_values[0],
++            (0, [
++                0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++            ])
++        );
++        assert_ne!(
++            descriptor.invariant_values[0].1,
++            [
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
++            ]
++        );
++        assert_eq!(
++            descriptor.invariant_values[1],
++            (2, [
++                0xaa, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++                0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++            ])
++        );
++    }
++
++    #[test]
++    fn test_check_admission_accepts_matching_candidate_and_builds_table() {
++        let a = &[0x60, 0x11, 0x60, 0x01, 0x60, 0xaa, 0x00];
++        let b = &[0x60, 0x11, 0x60, 0x02, 0x60, 0xaa, 0x00];
++        let variance = analyze_skeleton_group(&[a, b]);
++        let descriptor = AdmissionDescriptor::from_bytecode(0xbeef, a, &variance);
++
++        let table = check_admission(0xbeef, b, &descriptor).unwrap();
++        let expected = build_data_table(b, &variance);
++
++        assert_eq!(table.data, expected.data);
++    }
++
++    #[test]
++    fn test_check_admission_returns_empty_table_for_all_invariant_family() {
++        let a = &[0x60, 0x11, 0x60, 0xaa, 0x00];
++        let variance = analyze_skeleton_group(&[a]);
++        let descriptor = AdmissionDescriptor::from_bytecode(0x99, a, &variance);
++
++        let table = check_admission(0x99, a, &descriptor).unwrap();
++        assert!(table.data.is_empty());
++    }
++
++    #[test]
++    fn test_check_admission_rejects_invariant_mismatch() {
++        let a = &[0x60, 0x11, 0x60, 0x01, 0x60, 0xaa, 0x00];
++        let b = &[0x60, 0x22, 0x60, 0x02, 0x60, 0xaa, 0x00];
++        let variance =
++            analyze_skeleton_group(&[a, &[0x60, 0x11, 0x60, 0x02, 0x60, 0xaa, 0x00]]);
++        let descriptor = AdmissionDescriptor::from_bytecode(0xbeef, a, &variance);
++
++        assert!(matches!(
++            check_admission(0xbeef, b, &descriptor),
++            Err(AdmissionError::Mismatch(AdmissionMismatch::InvariantMismatch {
++                push_ordinal: 0,
++                ..
++            }))
++        ));
++    }
++
++    #[test]
++    fn test_check_admission_rejects_skeleton_fingerprint_mismatch() {
++        let a = &[0x60, 0x11, 0x60, 0x01, 0x00];
++        let variance = analyze_skeleton_group(&[a]);
++        let descriptor = AdmissionDescriptor::from_bytecode(7, a, &variance);
++
++        assert!(matches!(
++            check_admission(8, a, &descriptor),
++            Err(AdmissionError::Mismatch(
++                AdmissionMismatch::SkeletonFingerprintMismatch
++            ))
++        ));
++    }
++
++    #[test]
++    fn test_check_admission_accepts_all_variant_family() {
++        let a = &[0x60, 0x01, 0x60, 0x02, 0x00];
++        let b = &[0x60, 0x03, 0x60, 0x04, 0x00];
++        let variance = analyze_skeleton_group(&[a, b]);
++        let descriptor = AdmissionDescriptor::from_bytecode(5, a, &variance);
++
++        let table = check_admission(5, b, &descriptor).unwrap();
++        assert_eq!(table.data.len(), 64);
++    }
++
++    #[test]
++    fn test_check_admission_matches_truncated_immediate_behavior() {
++        let a = &[0x61, 0x12, 0x00];
++        let variance = analyze_skeleton_group(&[a]);
++        let descriptor = AdmissionDescriptor::from_bytecode(3, a, &variance);
++
++        let table = check_admission(3, a, &descriptor).unwrap();
++        assert!(table.data.is_empty());
++    }
++
++    #[test]
++    fn test_validate_descriptor_rejects_overlapping_ordinals() {
++        let descriptor = AdmissionDescriptor {
++            descriptor_version: 1,
++            skeleton_fingerprint: 7,
++            variant_positions: vec![1],
++            invariant_values: vec![(1, [0u8; 32])],
++        };
++
++        assert_eq!(
++            descriptor.validate(),
++            Err(DescriptorError::OverlappingOrdinals { push_ordinal: 1 })
++        );
++    }
++
++    #[test]
++    fn test_validate_descriptor_rejects_non_monotonic_variant_positions() {
++        let descriptor = AdmissionDescriptor {
++            descriptor_version: 1,
++            skeleton_fingerprint: 7,
++            variant_positions: vec![2, 1],
++            invariant_values: vec![],
++        };
++
++        assert_eq!(
++            descriptor.validate(),
++            Err(DescriptorError::NonMonotonicOrdinals)
++        );
++    }
++
++    #[test]
++    fn test_validate_descriptor_rejects_unsupported_version() {
++        let descriptor = AdmissionDescriptor {
++            descriptor_version: ADMISSION_DESCRIPTOR_VERSION + 1,
++            skeleton_fingerprint: 7,
++            variant_positions: vec![],
++            invariant_values: vec![],
++        };
++
++        assert_eq!(
++            descriptor.validate(),
++            Err(DescriptorError::UnsupportedVersion(ADMISSION_DESCRIPTOR_VERSION + 1))
++        );
++    }
++
++    /// Real EIP-1167 minimal proxy bytecodes from Base Mainnet block 38004930.
++    /// All 10 share skeleton bf4abe9c82c9be73 (45 bytes, 1 variant PUSH20 = the
++    /// delegate address, 1 invariant PUSH1 = 0x2b).
++    #[test]
++    fn test_admission_with_real_eip1167_proxies() {
++        let proxies: [&[u8]; 10] = [
++            &hex_literal::hex!("363d3d373d3d3d363d7350fc21f951bc42421815e104d21c5f094da9e70c5af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d738f41018a8a6e64043d842ae73fffae015a1113495af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d737cad62748ddf516cf85bc2c05c14786d84cf861c5af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d73ec8e5342b19977b4ef8892e02d8daecfa13158315af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d7388cc4e08c7608723f3e44e17ac669fb43b6a83135af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d73942e97a4c6fdc38b4cd1c0298d37d81fdd8e5a165af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d73c80c882c4d8b46700a04a15e7492f6d075b7e8035af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d73d3c6092eaa200edb6830180f20d1cfaab53fe99a5af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d73e26dc80e2b6a08a5d23487e57c3e13a7dfc85f5af43d82803e903d91602b57fd5bf3"),
++            &hex_literal::hex!("363d3d373d3d3d363d7310ee18f2789bbf68a2d2c41df5b7c60b08dedd5af43d82803e903d91602b57fd5bf3"),
++        ];
++
++        let refs: Vec<&[u8]> = proxies.iter().map(|p| *p).collect();
++        let variance = analyze_skeleton_group(&refs);
++
++        let anchor = proxies[0];
++        let descriptor = AdmissionDescriptor::from_bytecode(0xbf4abe9c, anchor, &variance);
++
++        for (i, candidate) in proxies.iter().enumerate() {
++            let table = check_admission(0xbf4abe9c, candidate, &descriptor)
++                .unwrap_or_else(|e| panic!("member {} rejected: {:?}", i, e));
++            let expected = build_data_table(candidate, &variance);
++            assert_eq!(
++                table.data, expected.data,
++                "data table mismatch for member {}",
++                i
++            );
++        }
++    }
++}
+diff --git a/crates/revmc/src/tests/mod.rs b/crates/revmc/src/tests/mod.rs
+index bda146f5..fae14920 100644
+--- a/crates/revmc/src/tests/mod.rs
++++ b/crates/revmc/src/tests/mod.rs
+@@ -7,6 +7,8 @@
+ )]
+ 
+ use crate::*;
++use crate::skeleton;
++use crate::skeleton_admission;
+ use context_interface;
+ use revm_bytecode::opcode as op;
+ use revm_interpreter as interpreter;
+@@ -23,10 +25,24 @@ mod meta;
+ 
+ mod fibonacci;
+ mod resume;
++mod smod_zero_opaque;
+ 
+ mod runner;
+ pub use runner::*;
+ 
++#[test]
++fn skeleton_admission_matches_existing_data_table_semantics() {
++    let a = &[op::PUSH1, 0x11, op::PUSH1, 0x01, op::PUSH1, 0xaa, op::STOP];
++    let b = &[op::PUSH1, 0x11, op::PUSH1, 0x02, op::PUSH1, 0xaa, op::STOP];
++
++    let variance = skeleton::analyze_skeleton_group(&[a, b]);
++    let descriptor = skeleton_admission::AdmissionDescriptor::from_bytecode(42, a, &variance);
++    let admitted = skeleton_admission::check_admission(42, b, &descriptor).unwrap();
++    let expected = skeleton::build_data_table(b, &variance);
++
++    assert_eq!(admitted.data, expected.data);
++}
++
+ const I256_MAX: U256 = U256::from_limbs([
+     0xFFFFFFFFFFFFFFFF,
+     0xFFFFFFFFFFFFFFFF,
+@@ -42,6 +58,11 @@ tests! {
+             expected_stack: &[U256::ZERO],
+             expected_gas: 2,
+         }),
++        truncated_push(@raw {
++            bytecode: &[op::PUSH2, 0xab],
++            expected_stack: &[U256::from(0xab00u64)],
++            expected_gas: 3,
++        }),
+         stop(@raw {
+             bytecode: &[op::STOP],
+             expected_gas: 0,
+@@ -855,13 +876,14 @@ tests! {
+             expected_stack: &[],
+             expected_memory: &0x69_U256.to_be_bytes::<32>(),
+             expected_gas: GAS_WHAT_INTERPRETER_SAYS,
+-            expected_next_action: InterpreterAction::NewFrame(FrameInput::Create(Box::new(CreateInputs::new(
+-                DEF_ADDR,
+-                context_interface::CreateScheme::Create,
+-                0x42_U256,
+-                Bytes::copy_from_slice(&0x69_U256.to_be_bytes::<32>()),
+-                66917,
+-            )))),
++            expected_next_action: InterpreterAction::NewFrame(FrameInput::Create(Box::new(CreateInputs {
++                caller: DEF_ADDR,
++                scheme: context_interface::CreateScheme::Create,
++                value: 0x42_U256,
++                init_code: Bytes::copy_from_slice(&0x69_U256.to_be_bytes::<32>()),
++                gas_limit: 66917,
++                skip_nonce_bump: false,
++            }))),
+         }),
+         create2(@raw {
+             bytecode: &[op::PUSH1, 0x69, op::PUSH0, op::MSTORE, op::PUSH1, 100, op::PUSH1, 32, op::PUSH0, op::PUSH1, 0x42, op::CREATE2],
+@@ -870,13 +892,14 @@ tests! {
+             expected_stack: &[],
+             expected_memory: &0x69_U256.to_be_bytes::<32>(),
+             expected_gas: GAS_WHAT_INTERPRETER_SAYS,
+-            expected_next_action: InterpreterAction::NewFrame(FrameInput::Create(Box::new(CreateInputs::new(
+-                DEF_ADDR,
+-                context_interface::CreateScheme::Create2 { salt: 100_U256 },
+-                0x42_U256,
+-                Bytes::copy_from_slice(&0x69_U256.to_be_bytes::<32>()),
+-                66908,
+-            )))),
++            expected_next_action: InterpreterAction::NewFrame(FrameInput::Create(Box::new(CreateInputs {
++                caller: DEF_ADDR,
++                scheme: context_interface::CreateScheme::Create2 { salt: 100_U256 },
++                value: 0x42_U256,
++                init_code: Bytes::copy_from_slice(&0x69_U256.to_be_bytes::<32>()),
++                gas_limit: 66908,
++                skip_nonce_bump: false,
++            }))),
+         }),
+         call(@raw {
+             bytecode: &[
+diff --git a/crates/revmc/src/tests/runner.rs b/crates/revmc/src/tests/runner.rs
+index 6f6155a5..2f7d2e03 100644
+--- a/crates/revmc/src/tests/runner.rs
++++ b/crates/revmc/src/tests/runner.rs
+@@ -1,13 +1,11 @@
+ use super::*;
+ use context_interface::{
+-    cfg::GasParams,
+     context::{SStoreResult, SelfDestructResult, StateLoad},
+-    host::LoadError,
+-    journaled_state::AccountInfoLoad,
++    journaled_state::AccountLoad,
+ };
+ use revm_bytecode::opcode as op;
+ use revm_interpreter::{
+-    instructions::instruction_table_gas_changes_spec, interpreter::ExtBytecode, CallInput, Host,
++    instructions::instruction_table, interpreter::ExtBytecode, CallInput, CancelSource, Host,
+     InputsImpl, Interpreter, SharedMemory,
+ };
+ use revm_primitives::{HashMap, B256};
+@@ -125,10 +123,9 @@ pub fn get_opcode_gas(op: u8) -> u64 {
+     }
+ }
+ 
+-/// Memory gas calculation with proper parameters.
+-/// This is a helper that wraps the new 3-argument memory_gas function.
++/// Memory gas calculation helper.
+ pub fn memory_gas_cost(num_words: usize) -> u64 {
+-    gas::memory_gas(num_words, 3, 512)
++    gas::memory_gas(num_words)
+ }
+ 
+ pub struct TestCase<'a> {
+@@ -275,7 +272,6 @@ pub struct TestHost {
+     pub code_map: &'static HashMap<Address, revm_bytecode::Bytecode>,
+     pub selfdestructs: Vec<(Address, Address)>,
+     pub logs: Vec<primitives::Log>,
+-    pub gas_params: GasParams,
+ }
+ 
+ impl Default for TestHost {
+@@ -289,18 +285,19 @@ impl TestHost {
+         Self::with_spec(DEF_SPEC)
+     }
+ 
+-    pub fn with_spec(spec_id: SpecId) -> Self {
++    pub fn with_spec(_spec_id: SpecId) -> Self {
+         Self {
+             storage: def_storage().clone(),
+             transient_storage: HashMap::default(),
+             code_map: def_codemap(),
+             selfdestructs: Vec::new(),
+             logs: Vec::new(),
+-            gas_params: GasParams::new_spec(spec_id),
+         }
+     }
+ }
+ 
++impl CancelSource for TestHost {}
++
+ impl Host for TestHost {
+     fn basefee(&self) -> U256 {
+         U256::from(0x1231)
+@@ -314,10 +311,6 @@ impl Host for TestHost {
+         U256::from(0x5678)
+     }
+ 
+-    fn gas_params(&self) -> &GasParams {
+-        &self.gas_params
+-    }
+-
+     fn difficulty(&self) -> U256 {
+         U256::from(0xcdef)
+     }
+@@ -356,7 +349,6 @@ impl Host for TestHost {
+     }
+ 
+     fn max_initcode_size(&self) -> usize {
+-        // EIP-3860: Max initcode size is 2 * MAX_CODE_SIZE = 2 * 24576 = 49152
+         49152
+     }
+ 
+@@ -368,11 +360,10 @@ impl Host for TestHost {
+         &mut self,
+         address: Address,
+         target: Address,
+-        _skip_cold_load: bool,
+-    ) -> Result<StateLoad<SelfDestructResult>, LoadError> {
++    ) -> Option<StateLoad<SelfDestructResult>> {
+         self.selfdestructs.push((address, target));
+ 
+-        Ok(StateLoad::new(
++        Some(StateLoad::new(
+             SelfDestructResult {
+                 had_value: false,
+                 target_exists: true,
+@@ -394,64 +385,53 @@ impl Host for TestHost {
+         self.transient_storage.get(&key).copied().unwrap_or(U256::ZERO)
+     }
+ 
+-    fn load_account_info_skip_cold_load(
+-        &mut self,
+-        address: Address,
+-        load_code: bool,
+-        _skip_cold_load: bool,
+-    ) -> Result<AccountInfoLoad<'_>, LoadError> {
+-        use revm_state::AccountInfo;
+-        use std::borrow::Cow;
+-
+-        let code = if load_code {
+-            // Return actual code if found, otherwise empty bytecode
+-            Some(self.code_map.get(&address).cloned().unwrap_or_default())
+-        } else {
+-            None
+-        };
+-
+-        // Return address byte as balance (test convention)
+-        // The balance is the last byte of the address
+-        let balance = U256::from(address.0[19]);
+-
+-        // Calculate code hash from the actual bytecode
+-        let code_hash = if let Some(bytecode) = self.code_map.get(&address) {
+-            keccak256(bytecode.original_byte_slice())
+-        } else {
+-            KECCAK_EMPTY
+-        };
+-
+-        // Create owned account info
+-        let info = AccountInfo { balance, nonce: 0, code_hash, account_id: None, code };
+-
+-        let is_empty = info.code.is_none() && info.balance.is_zero() && info.nonce == 0;
+-
+-        Ok(AccountInfoLoad { account: Cow::Owned(info), is_cold: false, is_empty })
+-    }
+-
+-    fn sstore_skip_cold_load(
++    fn sstore(
+         &mut self,
+         _address: Address,
+         key: U256,
+         value: U256,
+-        _skip_cold_load: bool,
+-    ) -> Result<StateLoad<SStoreResult>, LoadError> {
++    ) -> Option<StateLoad<SStoreResult>> {
+         let original = self.storage.get(&key).copied().unwrap_or(U256::ZERO);
+         self.storage.insert(key, value);
+-        Ok(StateLoad::new(
++        Some(StateLoad::new(
+             SStoreResult { original_value: original, present_value: original, new_value: value },
+             false,
+         ))
+     }
+ 
+-    fn sload_skip_cold_load(
+-        &mut self,
+-        _address: Address,
+-        key: U256,
+-        _skip_cold_load: bool,
+-    ) -> Result<StateLoad<U256>, LoadError> {
++    fn sload(&mut self, _address: Address, key: U256) -> Option<StateLoad<U256>> {
+         let value = self.storage.get(&key).copied().unwrap_or(U256::ZERO);
+-        Ok(StateLoad::new(value, false))
++        Some(StateLoad::new(value, false))
++    }
++
++    fn balance(&mut self, address: Address) -> Option<StateLoad<U256>> {
++        let balance = U256::from(address.0[19]);
++        Some(StateLoad::new(balance, false))
++    }
++
++    fn load_account_delegated(&mut self, _address: Address) -> Option<StateLoad<AccountLoad>> {
++        Some(StateLoad::new(
++            AccountLoad { is_delegate_account_cold: None, is_empty: false },
++            false,
++        ))
++    }
++
++    fn load_account_code(&mut self, address: Address) -> Option<StateLoad<Bytes>> {
++        let code = self
++            .code_map
++            .get(&address)
++            .map(|b| b.original_bytes())
++            .unwrap_or_default();
++        Some(StateLoad::new(code, false))
++    }
++
++    fn load_account_code_hash(&mut self, address: Address) -> Option<StateLoad<B256>> {
++        let code_hash = if let Some(bytecode) = self.code_map.get(&address) {
++            keccak256(bytecode.original_byte_slice())
++        } else {
++            KECCAK_EMPTY
++        };
++        Some(StateLoad::new(code_hash, false))
+     }
+ }
+ 
+@@ -550,10 +530,10 @@ fn run_compiled_test_case(test_case: &TestCase<'_>, f: EvmCompilerFn) {
+             DEF_GAS_LIMIT,
+         );
+ 
+-        let table = instruction_table_gas_changes_spec::<
++        let table = instruction_table::<
+             revm_interpreter::interpreter::EthInterpreter,
+             TestHost,
+-        >(spec_id);
++        >();
+         let mut int_host = TestHost::with_spec(spec_id);
+         let interpreter_action = interpreter.run_plain(&table, &mut int_host);
+ 
+@@ -750,18 +730,18 @@ fn assert_actions(actual: &InterpreterAction, expected: &InterpreterAction) {
+             InterpreterAction::NewFrame(FrameInput::Create(actual_create)),
+             InterpreterAction::NewFrame(FrameInput::Create(expected_create)),
+         ) => {
+-            // Compare CreateInputs fields
+-            assert_eq!(actual_create.caller(), expected_create.caller(), "caller mismatch");
+-            assert_eq!(actual_create.scheme(), expected_create.scheme(), "scheme mismatch");
+-            assert_eq!(actual_create.value(), expected_create.value(), "value mismatch");
++            // Compare CreateInputs fields (public fields, not methods)
++            assert_eq!(actual_create.caller, expected_create.caller, "caller mismatch");
++            assert_eq!(actual_create.scheme, expected_create.scheme, "scheme mismatch");
++            assert_eq!(actual_create.value, expected_create.value, "value mismatch");
+             assert_eq!(
+-                actual_create.init_code(),
+-                expected_create.init_code(),
++                actual_create.init_code,
++                expected_create.init_code,
+                 "init_code mismatch"
+             );
+             assert_eq!(
+-                actual_create.gas_limit(),
+-                expected_create.gas_limit(),
++                actual_create.gas_limit,
++                expected_create.gas_limit,
+                 "gas_limit mismatch"
+             );
+         }
+diff --git a/crates/revmc/src/tests/smod_zero_opaque.rs b/crates/revmc/src/tests/smod_zero_opaque.rs
+new file mode 100644
+index 00000000..120bbfdf
+--- /dev/null
++++ b/crates/revmc/src/tests/smod_zero_opaque.rs
+@@ -0,0 +1,100 @@
++//! Regression test: SMOD (and SDIV) with zero divisor loaded from memory.
++//!
++//! When the divisor is opaque to LLVM (e.g. loaded via MLOAD), the `srem i256`
++//! instruction is UB for divisor==0. LLVM may exploit this to remove the zero
++//! check entirely, producing incorrect results instead of the EVM-mandated 0.
++//!
++//! This test uses MLOAD to make the zero divisor opaque, so LLVM cannot
++//! constant-fold it away. The JIT result is compared against the interpreter.
++
++use super::{with_evm_context, DEF_SPEC};
++use crate::{Backend, EvmCompiler};
++use revm_bytecode::opcode as op;
++use revm_interpreter::InstructionResult;
++use revm_primitives::U256;
++
++/// Build bytecode: MSTORE(a, 0), MSTORE(b, 32), MLOAD(32), MLOAD(0), <op>
++///
++/// The operands pass through MLOAD (an opaque builtin), preventing LLVM from
++/// constant-folding or exploiting division-by-zero UB at compile time.
++fn bytecode_binop_opaque(opcode: u8, a: U256, b: U256) -> Vec<u8> {
++    let mut code = Vec::with_capacity(128);
++
++    // Store a at memory[0]
++    code.push(op::PUSH32);
++    code.extend_from_slice(&a.to_be_bytes::<32>());
++    code.push(op::PUSH1);
++    code.push(0x00);
++    code.push(op::MSTORE);
++
++    // Store b at memory[32]
++    code.push(op::PUSH32);
++    code.extend_from_slice(&b.to_be_bytes::<32>());
++    code.push(op::PUSH1);
++    code.push(0x20);
++    code.push(op::MSTORE);
++
++    // Load b from memory (opaque to LLVM)
++    code.push(op::PUSH1);
++    code.push(0x20);
++    code.push(op::MLOAD);
++
++    // Load a from memory (opaque to LLVM)
++    code.push(op::PUSH1);
++    code.push(0x00);
++    code.push(op::MLOAD);
++
++    // Execute the target opcode: OP(a, b)
++    code.push(opcode);
++
++    // STOP (implicit from vec zero-init, but be explicit)
++    code.push(op::STOP);
++
++    code
++}
++
++fn run_opaque_binop_test<B: Backend>(
++    compiler: &mut EvmCompiler<B>,
++    name: &str,
++    opcode: u8,
++    a: U256,
++    b: U256,
++    expected: U256,
++) {
++    let code = bytecode_binop_opaque(opcode, a, b);
++
++    unsafe { compiler.clear() }.unwrap();
++    compiler.inspect_stack_length(true);
++    let f = unsafe { compiler.jit(name, &code, DEF_SPEC) }.unwrap();
++
++    with_evm_context(&code, |ecx, stack, stack_len| {
++        let r = unsafe { f.call(Some(stack), Some(stack_len), ecx) };
++        assert_eq!(r, InstructionResult::Stop, "{name}: unexpected return");
++        assert_eq!(*stack_len, 1, "{name}: expected 1 stack element");
++        let actual = stack.as_slice()[0].to_u256();
++        assert_eq!(actual, expected, "{name}: JIT result mismatch (got {actual}, expected {expected})");
++    });
++}
++
++// SMOD with zero divisor (opaque): EVM spec mandates result = 0
++matrix_tests!(smod_zero_a5 = |jit| run_opaque_binop_test(
++    jit, "smod_zero_a5", op::SMOD, U256::from(5), U256::ZERO, U256::ZERO
++));
++
++matrix_tests!(smod_zero_a0 = |jit| run_opaque_binop_test(
++    jit, "smod_zero_a0", op::SMOD, U256::ZERO, U256::ZERO, U256::ZERO
++));
++
++// SDIV with zero divisor (opaque): EVM spec mandates result = 0
++matrix_tests!(sdiv_zero_a5 = |jit| run_opaque_binop_test(
++    jit, "sdiv_zero_a5", op::SDIV, U256::from(5), U256::ZERO, U256::ZERO
++));
++
++// DIV/MOD with zero divisor (opaque): verify builtins are also correct
++matrix_tests!(div_zero_opaque = |jit| run_opaque_binop_test(
++    jit, "div_zero_opaque", op::DIV, U256::from(32), U256::ZERO, U256::ZERO
++));
++
++matrix_tests!(mod_zero_opaque = |jit| run_opaque_binop_test(
++    jit, "mod_zero_opaque", op::MOD, U256::from(32), U256::ZERO, U256::ZERO
++));
+diff --git a/examples/runner/Cargo.toml b/examples/runner/Cargo.toml
+index 16b50eb5..962ef2db 100644
+--- a/examples/runner/Cargo.toml
++++ b/examples/runner/Cargo.toml
+@@ -21,4 +21,203 @@ cc = "1.0"
+ revmc-builtins = { workspace = true, default-features = false }
+ revmc-context = { workspace = true, default-features = false }
+ 
+-revm = { workspace = true, default-features = false }
++revm = { workspace = true, default-features = false, features = ["std", "serde"] }
++op-revm = { git = "https://github.com/SipengXie2024/skelot-revm", rev = "db2ea6755d1d1b235843b7e9894160a0022f949b", default-features = false, features = ["std"] }
++
++# Used by jsonl_bench / bin_bench binaries
++revmc = { workspace = true, features = ["llvm-prefer-dynamic"] }
++serde = { version = "1", features = ["derive"] }
++serde_json = "1"
++hex = "0.4"
++hex-literal = "0.4"
++libloading = "0.8"
++bincode = "1.3"
++clap = { version = "4", features = ["derive"] }
++k256 = "0.13"
++libm = "0.2"
++ureq = { version = "2", features = ["json"] }
++anyhow = "1"
++chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
++tempfile = "3"
++perf-event = "0.4"
++perf-event-open-sys = "6"
++
++[dev-dependencies]
++criterion = "0.5"
++
++[[bin]]
++name = "jsonl_bench"
++path = "src/bin/jsonl_bench.rs"
++
++[[bin]]
++name = "bin_bench"
++path = "src/bin/bin_bench.rs"
++
++[[bin]]
++name = "precompile"
++path = "src/bin/precompile.rs"
++
++[[bin]]
++name = "compile_profile"
++path = "src/bin/compile_profile.rs"
++
++[[bin]]
++name = "scan_codes"
++path = "src/bin/scan_codes.rs"
++
++[[bin]]
++name = "gas_debug"
++path = "src/bin/gas_debug.rs"
++
++[[bin]]
++name = "frame_bench"
++path = "src/bin/frame_bench.rs"
++
++[[bin]]
++name = "ablation_bench"
++path = "src/bin/ablation_bench.rs"
++
++[[bin]]
++name = "selective_demo"
++path = "src/bin/selective_demo.rs"
++
++[[bin]]
++name = "icache_experiment"
++path = "src/bin/icache_experiment.rs"
++
++[[bin]]
++name = "fullblock_ablation"
++path = "src/bin/fullblock_ablation.rs"
++
++[[bin]]
++name = "opcode_dedup"
++path = "src/bin/opcode_dedup.rs"
++
++[[bin]]
++name = "skeleton_export"
++path = "src/bin/skeleton_export.rs"
++
++[[bin]]
++name = "skeleton_identify"
++path = "src/bin/skeleton_identify.rs"
++
++[[bin]]
++name = "push_variance"
++path = "src/bin/push_variance.rs"
++
++[[bin]]
++name = "skeleton_bench"
++path = "src/bin/skeleton_bench.rs"
++
++[[bin]]
++name = "skeleton_precompile"
++path = "src/bin/skeleton_precompile.rs"
++
++[[bin]]
++name = "collect_profile"
++path = "src/bin/collect_profile.rs"
++
++[[bin]]
++name = "pgo_bench"
++path = "src/bin/pgo_bench.rs"
++
++[[bin]]
++name = "pgo_single_bench"
++path = "src/bin/pgo_single_bench.rs"
++
++[[bin]]
++name = "per_contract_ablation"
++path = "src/bin/per_contract_ablation.rs"
++
++[[bin]]
++name = "compile_hex"
++path = "src/bin/compile_hex.rs"
++
++[[bin]]
++name = "skelot_compile_bench"
++path = "src/bin/skelot_compile_bench.rs"
++
++[[bin]]
++name = "skelot_ablation_bench"
++path = "src/bin/skelot_ablation_bench.rs"
++
++[[bench]]
++name = "bench_airdrop"
++path = "src/bench_airdrop.rs"
++harness = false
++
++[[bench]]
++name = "bench_json_test"
++path = "src/bench_json_test.rs"
++harness = false
++
++[[bench]]
++name = "bench_burntpix"
++path = "src/bench_burntpix.rs"
++harness = false
++
++[[bench]]
++name = "bench_curve"
++path = "src/bench_curve.rs"
++harness = false
++
++[[bench]]
++name = "bench_compute_kernel"
++path = "src/bench_compute_kernel.rs"
++harness = false
++
++[[bin]]
++name = "skelot_dataset_scan"
++path = "src/bin/skelot_dataset_scan.rs"
++
++[[bin]]
++name = "skeleton_vs_perhash_bench"
++path = "src/bin/skeleton_vs_perhash_bench.rs"
++
++[[bin]]
++name = "skeleton_deployment_span"
++path = "src/bin/skeleton_deployment_span.rs"
++
++[[bin]]
++name = "nested_family_count"
++path = "src/bin/nested_family_count.rs"
++
++[[bin]]
++name = "grouping_stats"
++path = "src/bin/grouping_stats.rs"
++
++[[bin]]
++name = "skip_logic_conflicts"
++path = "src/bin/skip_logic_conflicts.rs"
++
++[[bin]]
++name = "jump_hit_attribution"
++path = "src/bin/jump_hit_attribution.rs"
++
++[[bin]]
++name = "addr_code_hash"
++path = "src/bin/addr_code_hash.rs"
++
++[[bin]]
++name = "frame_tx_index"
++path = "src/bin/frame_tx_index.rs"
++
++[[bin]]
++name = "hash_to_addr"
++path = "src/bin/hash_to_addr.rs"
++
++[[bin]]
++name = "snapshot_audit"
++path = "src/bin/snapshot_audit.rs"
++
++[[bin]]
++name = "replay_outcomes"
++path = "src/bin/replay_outcomes.rs"
++
++[[bin]]
++name = "hash_block_freq"
++path = "src/bin/hash_block_freq.rs"
++
++[[bin]]
++name = "load_reason_audit"
++path = "src/bin/load_reason_audit.rs"
+diff --git a/examples/runner/build.rs b/examples/runner/build.rs
+index 68cba12c..57d60dc1 100644
+--- a/examples/runner/build.rs
++++ b/examples/runner/build.rs
+@@ -20,7 +20,7 @@ fn main() -> Result<()> {
+     let object = out_dir.join(name).with_extension("o");
+     compiler.write_object_to_file(&object)?;
+ 
+-    cc::Build::new().object(&object).static_flag(true).compile(name);
++    cc::Build::new().object(&object).compile(name);
+ 
+     Ok(())
+ }
+diff --git a/scripts/run_skeleton_precompile.sh b/scripts/run_skeleton_precompile.sh
+new file mode 100755
+index 00000000..79f929ab
+--- /dev/null
++++ b/scripts/run_skeleton_precompile.sh
+@@ -0,0 +1,20 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++LOG="/tmp/skeleton_precompile.log"
++
++echo "Building release binary..."
++cargo build -p revmc-examples-runner --bin skeleton_precompile --release 2>&1 | tail -1
++
++echo "Starting skeleton_precompile (log: $LOG)"
++echo "  Estimated: ~9.5 hours for 10K blocks"
++echo "  Resume-safe: re-run this script to continue from where it left off"
++echo ""
++
++nohup cargo run -p revmc-examples-runner --bin skeleton_precompile --release -- \
++  --cache-dir /tmp/jit_cache --count 9997 \
++  >> "$LOG" 2>&1 &
++
++PID=$!
++echo "PID: $PID"
++echo "Monitor: tail -f $LOG"
+diff --git a/tests/state-tests/src/lib.rs b/tests/state-tests/src/lib.rs
+index 8f72ec90..78062ea2 100644
+--- a/tests/state-tests/src/lib.rs
++++ b/tests/state-tests/src/lib.rs
+@@ -13,7 +13,7 @@ use revm::{
+     interpreter::{
+         instructions::instruction_table_gas_changes_spec,
+         interpreter::{EthInterpreter, ExtBytecode},
+-        interpreter_types::ReturnData,
++        interpreter_types::{LegacyBytecode, ReturnData},
+         FrameInput, InputsImpl, Interpreter, InterpreterAction, InterpreterResult, SharedMemory,
+     },
+     primitives::{hardfork::SpecId, keccak256, Bytes, TxKind, B256, U256},
+@@ -695,42 +695,10 @@ fn run_with_jit(
+ }
+ 
+ /// Call JIT function with explicit resume_at tracking.
+-fn call_jit_with_resume<DB: revm::Database + 'static>(
+-    interpreter: &mut Interpreter<EthInterpreter>,
+-    ctx: &mut Context<BlockEnv, TxEnv, CfgEnv, DB, Journal<DB>, ()>,
+-    jit_fn: EvmCompilerFn,
+-    resume_at: usize,
+-) -> (revm::interpreter::InstructionResult, usize)
+-where
+-    DB::Error: std::fmt::Debug,
+-{
+-    interpreter.bytecode.action = None;
+-
+-    let (stack, stack_len) = EvmStack::from_interpreter_stack(&mut interpreter.stack);
+-    let mut ecx = EvmContext {
+-        memory: &mut interpreter.memory,
+-        input: &mut interpreter.input,
+-        gas: &mut interpreter.gas,
+-        host: ctx,
+-        next_action: &mut interpreter.bytecode.action,
+-        return_data: interpreter.return_data.buffer(),
+-        is_static: interpreter.runtime_flag.is_static,
+-        resume_at,
+-    };
+-
+-    let result = unsafe { jit_fn.call(Some(stack), Some(stack_len), &mut ecx) };
+-
+-    if result == revm::interpreter::InstructionResult::OutOfGas {
+-        ecx.gas.spend_all();
+-    }
+-
+-    let new_resume_at = ecx.resume_at;
+-    (result, new_resume_at)
+-}
+-
+-/// Call JIT function with explicit resume_at tracking for nested frames.
+-/// This is similar to call_jit_with_resume but accepts a generic Host.
+-fn call_jit_with_resume_nested<H: revmc::HostExt>(
++///
++/// Constructs an EvmContext from the interpreter state, invokes the JIT function,
++/// and returns the instruction result along with the updated resume_at value.
++fn call_jit_with_resume<H: revmc::HostExt>(
+     interpreter: &mut Interpreter<EthInterpreter>,
+     host: &mut H,
+     jit_fn: EvmCompilerFn,
+@@ -739,6 +707,11 @@ fn call_jit_with_resume_nested<H: revmc::HostExt>(
+     interpreter.bytecode.action = None;
+ 
+     let (stack, stack_len) = EvmStack::from_interpreter_stack(&mut interpreter.stack);
++    // Extract raw pointer and length before the struct init to avoid borrow conflicts:
++    // bytecode_slice borrows interpreter.bytecode immutably, but next_action needs it mutably.
++    let bytecode_slice = interpreter.bytecode.bytecode_slice();
++    let bytecode_ptr = bytecode_slice.as_ptr();
++    let bytecode_len = bytecode_slice.len();
+     let mut ecx = EvmContext {
+         memory: &mut interpreter.memory,
+         input: &mut interpreter.input,
+@@ -748,6 +721,9 @@ fn call_jit_with_resume_nested<H: revmc::HostExt>(
+         return_data: interpreter.return_data.buffer(),
+         is_static: interpreter.runtime_flag.is_static,
+         resume_at,
++        bytecode_ptr,
++        bytecode_len,
++        imm_data_ptr: core::ptr::null(),
+     };
+ 
+     let result = unsafe { jit_fn.call(Some(stack), Some(stack_len), &mut ecx) };
+@@ -819,10 +795,8 @@ where
+                 // Track resume_at across nested call suspensions
+                 let mut resume_at: usize = 0;
+ 
+-                // Use call_jit_with_resume_nested instead of call_with_interpreter to properly
+-                // track resume_at
+                 let (result, new_resume_at) =
+-                    call_jit_with_resume_nested(&mut nested_interpreter, ctx, jit_fn, resume_at);
++                    call_jit_with_resume(&mut nested_interpreter, ctx, jit_fn, resume_at);
+                 resume_at = new_resume_at;
+                 let mut last_result = result;
+ 
+@@ -861,7 +835,7 @@ where
+                                 inner_return_offset,
+                             );
+                             // Resume with preserved resume_at
+-                            let (result, new_resume_at) = call_jit_with_resume_nested(
++                            let (result, new_resume_at) = call_jit_with_resume(
+                                 &mut nested_interpreter,
+                                 ctx,
+                                 jit_fn,

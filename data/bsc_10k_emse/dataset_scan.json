@@ -1,0 +1,1005 @@
+{
+  "chain": "bsc",
+  "bucket_scheme": "paper_v1_small_100_999",
+  "schema_version": 1,
+  "start_block": 95897884,
+  "block_count": 10000,
+  "window_size": 1000,
+  "corpus": {
+    "unique_bytecodes": 14444,
+    "unique_skeletons": 9996,
+    "reduction_ratio": 0.30794793685959565,
+    "push_immediate_bytes": 60020446,
+    "total_opcode_bytes": 91851669,
+    "raw_bytes": 151872115,
+    "buckets": {
+      "huge": {
+        "count_bytecodes": 4345,
+        "count_skeletons": 2295,
+        "reduction_ratio": 0.4718066743383199,
+        "mean_size": 21024.31070195627,
+        "raw_bytes": 91350630
+      },
+      "large": {
+        "count_bytecodes": 5537,
+        "count_skeletons": 4563,
+        "reduction_ratio": 0.17590753115405455,
+        "mean_size": 9091.244717355969,
+        "raw_bytes": 50338222
+      },
+      "medium": {
+        "count_bytecodes": 3366,
+        "count_skeletons": 2445,
+        "reduction_ratio": 0.2736185383244206,
+        "mean_size": 2924.6907308377895,
+        "raw_bytes": 9844509
+      },
+      "small": {
+        "count_bytecodes": 639,
+        "count_skeletons": 311,
+        "reduction_ratio": 0.5133020344287951,
+        "mean_size": 471.36619718309856,
+        "raw_bytes": 301203
+      },
+      "tiny": {
+        "count_bytecodes": 557,
+        "count_skeletons": 384,
+        "reduction_ratio": 0.3105924596050269,
+        "mean_size": 67.41651705565529,
+        "raw_bytes": 37551
+      }
+    }
+  },
+  "windows": [
+    {
+      "window_id": 0,
+      "start_block": 95897884,
+      "end_block": 95898884,
+      "metrics": {
+        "unique_bytecodes": 5905,
+        "unique_skeletons": 4448,
+        "reduction_ratio": 0.2467400508044031,
+        "push_immediate_bytes": 24582710,
+        "total_opcode_bytes": 38607913,
+        "raw_bytes": 63190623,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 1423,
+            "count_skeletons": 1148,
+            "reduction_ratio": 0.19325368938861565,
+            "mean_size": 2895.4265635980323,
+            "raw_bytes": 4120192
+          },
+          "huge": {
+            "count_bytecodes": 1832,
+            "count_skeletons": 1122,
+            "reduction_ratio": 0.38755458515283847,
+            "mean_size": 21150.465611353713,
+            "raw_bytes": 38747653
+          },
+          "tiny": {
+            "count_bytecodes": 133,
+            "count_skeletons": 58,
+            "reduction_ratio": 0.5639097744360902,
+            "mean_size": 58.40601503759399,
+            "raw_bytes": 7768
+          },
+          "small": {
+            "count_bytecodes": 294,
+            "count_skeletons": 158,
+            "reduction_ratio": 0.4625850340136054,
+            "mean_size": 477.23809523809524,
+            "raw_bytes": 140308
+          },
+          "large": {
+            "count_bytecodes": 2223,
+            "count_skeletons": 1963,
+            "reduction_ratio": 0.11695906432748537,
+            "mean_size": 9075.43949617634,
+            "raw_bytes": 20174702
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 5905,
+        "unique_skeletons": 4448,
+        "reduction_ratio": 0.2467400508044031,
+        "push_immediate_bytes": 24582710,
+        "total_opcode_bytes": 38607913,
+        "raw_bytes": 63190623,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 1423,
+            "count_skeletons": 1148,
+            "reduction_ratio": 0.19325368938861565,
+            "mean_size": 2895.4265635980323,
+            "raw_bytes": 4120192
+          },
+          "large": {
+            "count_bytecodes": 2223,
+            "count_skeletons": 1963,
+            "reduction_ratio": 0.11695906432748537,
+            "mean_size": 9075.43949617634,
+            "raw_bytes": 20174702
+          },
+          "huge": {
+            "count_bytecodes": 1832,
+            "count_skeletons": 1122,
+            "reduction_ratio": 0.38755458515283847,
+            "mean_size": 21150.465611353713,
+            "raw_bytes": 38747653
+          },
+          "small": {
+            "count_bytecodes": 294,
+            "count_skeletons": 158,
+            "reduction_ratio": 0.4625850340136054,
+            "mean_size": 477.23809523809524,
+            "raw_bytes": 140308
+          },
+          "tiny": {
+            "count_bytecodes": 133,
+            "count_skeletons": 58,
+            "reduction_ratio": 0.5639097744360902,
+            "mean_size": 58.40601503759399,
+            "raw_bytes": 7768
+          }
+        }
+      }
+    },
+    {
+      "window_id": 1,
+      "start_block": 95898884,
+      "end_block": 95899884,
+      "metrics": {
+        "unique_bytecodes": 1878,
+        "unique_skeletons": 1443,
+        "reduction_ratio": 0.23162939297124596,
+        "push_immediate_bytes": 7666282,
+        "total_opcode_bytes": 11806540,
+        "raw_bytes": 19472822,
+        "buckets": {
+          "huge": {
+            "count_bytecodes": 563,
+            "count_skeletons": 329,
+            "reduction_ratio": 0.41563055062166965,
+            "mean_size": 20960.238010657195,
+            "raw_bytes": 11800614
+          },
+          "medium": {
+            "count_bytecodes": 419,
+            "count_skeletons": 345,
+            "reduction_ratio": 0.1766109785202864,
+            "mean_size": 2740.0167064439142,
+            "raw_bytes": 1148067
+          },
+          "large": {
+            "count_bytecodes": 723,
+            "count_skeletons": 645,
+            "reduction_ratio": 0.10788381742738584,
+            "mean_size": 8946.528354080221,
+            "raw_bytes": 6468340
+          },
+          "tiny": {
+            "count_bytecodes": 70,
+            "count_skeletons": 54,
+            "reduction_ratio": 0.22857142857142854,
+            "mean_size": 69.05714285714286,
+            "raw_bytes": 4834
+          },
+          "small": {
+            "count_bytecodes": 103,
+            "count_skeletons": 70,
+            "reduction_ratio": 0.3203883495145631,
+            "mean_size": 494.8252427184466,
+            "raw_bytes": 50967
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 6127,
+        "unique_skeletons": 4536,
+        "reduction_ratio": 0.2596703117349437,
+        "push_immediate_bytes": 25404773,
+        "total_opcode_bytes": 39625819,
+        "raw_bytes": 65030592,
+        "buckets": {
+          "huge": {
+            "count_bytecodes": 1894,
+            "count_skeletons": 1148,
+            "reduction_ratio": 0.39387539598732846,
+            "mean_size": 21099.832101372755,
+            "raw_bytes": 39963082
+          },
+          "large": {
+            "count_bytecodes": 2300,
+            "count_skeletons": 2015,
+            "reduction_ratio": 0.12391304347826082,
+            "mean_size": 9038.28652173913,
+            "raw_bytes": 20788059
+          },
+          "small": {
+            "count_bytecodes": 339,
+            "count_skeletons": 175,
+            "reduction_ratio": 0.4837758112094396,
+            "mean_size": 466.6165191740413,
+            "raw_bytes": 158183
+          },
+          "tiny": {
+            "count_bytecodes": 145,
+            "count_skeletons": 66,
+            "reduction_ratio": 0.5448275862068965,
+            "mean_size": 59.08965517241379,
+            "raw_bytes": 8568
+          },
+          "medium": {
+            "count_bytecodes": 1449,
+            "count_skeletons": 1133,
+            "reduction_ratio": 0.21808143547273984,
+            "mean_size": 2838.3022774327123,
+            "raw_bytes": 4112700
+          }
+        }
+      }
+    },
+    {
+      "window_id": 2,
+      "start_block": 95899884,
+      "end_block": 95900884,
+      "metrics": {
+        "unique_bytecodes": 1267,
+        "unique_skeletons": 928,
+        "reduction_ratio": 0.26756116811365427,
+        "push_immediate_bytes": 4998962,
+        "total_opcode_bytes": 7786157,
+        "raw_bytes": 12785119,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 325,
+            "count_skeletons": 252,
+            "reduction_ratio": 0.22461538461538466,
+            "mean_size": 2950.9015384615386,
+            "raw_bytes": 959043
+          },
+          "huge": {
+            "count_bytecodes": 344,
+            "count_skeletons": 168,
+            "reduction_ratio": 0.5116279069767442,
+            "mean_size": 21104.752906976744,
+            "raw_bytes": 7260035
+          },
+          "tiny": {
+            "count_bytecodes": 49,
+            "count_skeletons": 37,
+            "reduction_ratio": 0.24489795918367352,
+            "mean_size": 68.89795918367346,
+            "raw_bytes": 3376
+          },
+          "small": {
+            "count_bytecodes": 46,
+            "count_skeletons": 30,
+            "reduction_ratio": 0.34782608695652173,
+            "mean_size": 437.5,
+            "raw_bytes": 20125
+          },
+          "large": {
+            "count_bytecodes": 503,
+            "count_skeletons": 442,
+            "reduction_ratio": 0.12127236580516898,
+            "mean_size": 9030.894632206759,
+            "raw_bytes": 4542540
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 5953,
+        "unique_skeletons": 4403,
+        "reduction_ratio": 0.2603729212161935,
+        "push_immediate_bytes": 24596920,
+        "total_opcode_bytes": 38505092,
+        "raw_bytes": 63102012,
+        "buckets": {
+          "small": {
+            "count_bytecodes": 311,
+            "count_skeletons": 150,
+            "reduction_ratio": 0.517684887459807,
+            "mean_size": 454.2572347266881,
+            "raw_bytes": 141274
+          },
+          "tiny": {
+            "count_bytecodes": 118,
+            "count_skeletons": 45,
+            "reduction_ratio": 0.6186440677966102,
+            "mean_size": 56.55084745762712,
+            "raw_bytes": 6673
+          },
+          "large": {
+            "count_bytecodes": 2252,
+            "count_skeletons": 1969,
+            "reduction_ratio": 0.12566607460035528,
+            "mean_size": 8999.951154529308,
+            "raw_bytes": 20267890
+          },
+          "huge": {
+            "count_bytecodes": 1824,
+            "count_skeletons": 1098,
+            "reduction_ratio": 0.3980263157894737,
+            "mean_size": 21103.38432017544,
+            "raw_bytes": 38492573
+          },
+          "medium": {
+            "count_bytecodes": 1448,
+            "count_skeletons": 1143,
+            "reduction_ratio": 0.21063535911602205,
+            "mean_size": 2896.1339779005525,
+            "raw_bytes": 4193602
+          }
+        }
+      }
+    },
+    {
+      "window_id": 3,
+      "start_block": 95900884,
+      "end_block": 95901884,
+      "metrics": {
+        "unique_bytecodes": 992,
+        "unique_skeletons": 735,
+        "reduction_ratio": 0.25907258064516125,
+        "push_immediate_bytes": 4147371,
+        "total_opcode_bytes": 6292024,
+        "raw_bytes": 10439395,
+        "buckets": {
+          "small": {
+            "count_bytecodes": 25,
+            "count_skeletons": 23,
+            "reduction_ratio": 0.07999999999999996,
+            "mean_size": 526.56,
+            "raw_bytes": 13164
+          },
+          "tiny": {
+            "count_bytecodes": 55,
+            "count_skeletons": 44,
+            "reduction_ratio": 0.19999999999999996,
+            "mean_size": 70.0,
+            "raw_bytes": 3850
+          },
+          "huge": {
+            "count_bytecodes": 303,
+            "count_skeletons": 163,
+            "reduction_ratio": 0.4620462046204621,
+            "mean_size": 20758.930693069306,
+            "raw_bytes": 6289956
+          },
+          "large": {
+            "count_bytecodes": 381,
+            "count_skeletons": 318,
+            "reduction_ratio": 0.16535433070866146,
+            "mean_size": 9106.191601049868,
+            "raw_bytes": 3469459
+          },
+          "medium": {
+            "count_bytecodes": 228,
+            "count_skeletons": 187,
+            "reduction_ratio": 0.17982456140350878,
+            "mean_size": 2907.745614035088,
+            "raw_bytes": 662966
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 5858,
+        "unique_skeletons": 4309,
+        "reduction_ratio": 0.26442471833390235,
+        "push_immediate_bytes": 24498284,
+        "total_opcode_bytes": 38264370,
+        "raw_bytes": 62762654,
+        "buckets": {
+          "large": {
+            "count_bytecodes": 2182,
+            "count_skeletons": 1891,
+            "reduction_ratio": 0.13336388634280472,
+            "mean_size": 9033.932172318973,
+            "raw_bytes": 19712040
+          },
+          "huge": {
+            "count_bytecodes": 1842,
+            "count_skeletons": 1098,
+            "reduction_ratio": 0.4039087947882736,
+            "mean_size": 21092.99131378936,
+            "raw_bytes": 38853290
+          },
+          "small": {
+            "count_bytecodes": 274,
+            "count_skeletons": 142,
+            "reduction_ratio": 0.4817518248175182,
+            "mean_size": 476.34671532846716,
+            "raw_bytes": 130519
+          },
+          "medium": {
+            "count_bytecodes": 1421,
+            "count_skeletons": 1116,
+            "reduction_ratio": 0.2146375791695989,
+            "mean_size": 2856.1428571428573,
+            "raw_bytes": 4058579
+          },
+          "tiny": {
+            "count_bytecodes": 139,
+            "count_skeletons": 63,
+            "reduction_ratio": 0.5467625899280575,
+            "mean_size": 59.17985611510792,
+            "raw_bytes": 8226
+          }
+        }
+      }
+    },
+    {
+      "window_id": 4,
+      "start_block": 95901884,
+      "end_block": 95902884,
+      "metrics": {
+        "unique_bytecodes": 975,
+        "unique_skeletons": 790,
+        "reduction_ratio": 0.18974358974358974,
+        "push_immediate_bytes": 4116461,
+        "total_opcode_bytes": 5988405,
+        "raw_bytes": 10104866,
+        "buckets": {
+          "tiny": {
+            "count_bytecodes": 41,
+            "count_skeletons": 35,
+            "reduction_ratio": 0.14634146341463417,
+            "mean_size": 71.41463414634147,
+            "raw_bytes": 2928
+          },
+          "small": {
+            "count_bytecodes": 50,
+            "count_skeletons": 37,
+            "reduction_ratio": 0.26,
+            "mean_size": 443.26,
+            "raw_bytes": 22163
+          },
+          "large": {
+            "count_bytecodes": 371,
+            "count_skeletons": 340,
+            "reduction_ratio": 0.0835579514824798,
+            "mean_size": 9156.78706199461,
+            "raw_bytes": 3397168
+          },
+          "huge": {
+            "count_bytecodes": 290,
+            "count_skeletons": 179,
+            "reduction_ratio": 0.38275862068965516,
+            "mean_size": 20769.244827586208,
+            "raw_bytes": 6023081
+          },
+          "medium": {
+            "count_bytecodes": 223,
+            "count_skeletons": 199,
+            "reduction_ratio": 0.1076233183856502,
+            "mean_size": 2957.5156950672645,
+            "raw_bytes": 659526
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 6217,
+        "unique_skeletons": 4654,
+        "reduction_ratio": 0.251407431236931,
+        "push_immediate_bytes": 26064893,
+        "total_opcode_bytes": 40657513,
+        "raw_bytes": 66722406,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 1478,
+            "count_skeletons": 1195,
+            "reduction_ratio": 0.19147496617050064,
+            "mean_size": 2855.0879566982408,
+            "raw_bytes": 4219820
+          },
+          "large": {
+            "count_bytecodes": 2298,
+            "count_skeletons": 2024,
+            "reduction_ratio": 0.11923411662315053,
+            "mean_size": 9050.496083550914,
+            "raw_bytes": 20798040
+          },
+          "tiny": {
+            "count_bytecodes": 131,
+            "count_skeletons": 57,
+            "reduction_ratio": 0.5648854961832062,
+            "mean_size": 58.31297709923664,
+            "raw_bytes": 7639
+          },
+          "small": {
+            "count_bytecodes": 341,
+            "count_skeletons": 176,
+            "reduction_ratio": 0.4838709677419355,
+            "mean_size": 464.41055718475076,
+            "raw_bytes": 158364
+          },
+          "huge": {
+            "count_bytecodes": 1969,
+            "count_skeletons": 1204,
+            "reduction_ratio": 0.38852209243270697,
+            "mean_size": 21096.263585576435,
+            "raw_bytes": 41538543
+          }
+        }
+      }
+    },
+    {
+      "window_id": 5,
+      "start_block": 95902884,
+      "end_block": 95903884,
+      "metrics": {
+        "unique_bytecodes": 767,
+        "unique_skeletons": 590,
+        "reduction_ratio": 0.23076923076923073,
+        "push_immediate_bytes": 3134188,
+        "total_opcode_bytes": 5018287,
+        "raw_bytes": 8152475,
+        "buckets": {
+          "small": {
+            "count_bytecodes": 23,
+            "count_skeletons": 19,
+            "reduction_ratio": 0.17391304347826086,
+            "mean_size": 471.7826086956522,
+            "raw_bytes": 10851
+          },
+          "huge": {
+            "count_bytecodes": 232,
+            "count_skeletons": 125,
+            "reduction_ratio": 0.4612068965517241,
+            "mean_size": 21228.810344827587,
+            "raw_bytes": 4925084
+          },
+          "tiny": {
+            "count_bytecodes": 42,
+            "count_skeletons": 34,
+            "reduction_ratio": 0.19047619047619047,
+            "mean_size": 70.28571428571429,
+            "raw_bytes": 2952
+          },
+          "large": {
+            "count_bytecodes": 283,
+            "count_skeletons": 258,
+            "reduction_ratio": 0.08833922261484095,
+            "mean_size": 9473.053003533569,
+            "raw_bytes": 2680874
+          },
+          "medium": {
+            "count_bytecodes": 187,
+            "count_skeletons": 154,
+            "reduction_ratio": 0.17647058823529416,
+            "mean_size": 2848.7379679144383,
+            "raw_bytes": 532714
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 5900,
+        "unique_skeletons": 4369,
+        "reduction_ratio": 0.2594915254237288,
+        "push_immediate_bytes": 24705765,
+        "total_opcode_bytes": 38806472,
+        "raw_bytes": 63512237,
+        "buckets": {
+          "large": {
+            "count_bytecodes": 2202,
+            "count_skeletons": 1935,
+            "reduction_ratio": 0.12125340599455037,
+            "mean_size": 9079.334695731153,
+            "raw_bytes": 19992695
+          },
+          "tiny": {
+            "count_bytecodes": 134,
+            "count_skeletons": 60,
+            "reduction_ratio": 0.5522388059701493,
+            "mean_size": 58.92537313432836,
+            "raw_bytes": 7896
+          },
+          "small": {
+            "count_bytecodes": 313,
+            "count_skeletons": 161,
+            "reduction_ratio": 0.48562300319488816,
+            "mean_size": 448.7092651757188,
+            "raw_bytes": 140446
+          },
+          "medium": {
+            "count_bytecodes": 1393,
+            "count_skeletons": 1099,
+            "reduction_ratio": 0.21105527638190957,
+            "mean_size": 2857.030150753769,
+            "raw_bytes": 3979843
+          },
+          "huge": {
+            "count_bytecodes": 1858,
+            "count_skeletons": 1116,
+            "reduction_ratio": 0.3993541442411195,
+            "mean_size": 21200.945640473627,
+            "raw_bytes": 39391357
+          }
+        }
+      }
+    },
+    {
+      "window_id": 6,
+      "start_block": 95903884,
+      "end_block": 95904884,
+      "metrics": {
+        "unique_bytecodes": 678,
+        "unique_skeletons": 553,
+        "reduction_ratio": 0.18436578171091444,
+        "push_immediate_bytes": 2652795,
+        "total_opcode_bytes": 4219239,
+        "raw_bytes": 6872034,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 153,
+            "count_skeletons": 146,
+            "reduction_ratio": 0.04575163398692805,
+            "mean_size": 3279.078431372549,
+            "raw_bytes": 501699
+          },
+          "tiny": {
+            "count_bytecodes": 46,
+            "count_skeletons": 35,
+            "reduction_ratio": 0.23913043478260865,
+            "mean_size": 68.47826086956522,
+            "raw_bytes": 3150
+          },
+          "small": {
+            "count_bytecodes": 28,
+            "count_skeletons": 25,
+            "reduction_ratio": 0.1071428571428571,
+            "mean_size": 457.14285714285717,
+            "raw_bytes": 12800
+          },
+          "large": {
+            "count_bytecodes": 262,
+            "count_skeletons": 241,
+            "reduction_ratio": 0.08015267175572516,
+            "mean_size": 9126.41603053435,
+            "raw_bytes": 2391121
+          },
+          "huge": {
+            "count_bytecodes": 189,
+            "count_skeletons": 106,
+            "reduction_ratio": 0.4391534391534392,
+            "mean_size": 20969.650793650795,
+            "raw_bytes": 3963264
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 6146,
+        "unique_skeletons": 4558,
+        "reduction_ratio": 0.25837943377806705,
+        "push_immediate_bytes": 25531055,
+        "total_opcode_bytes": 40272943,
+        "raw_bytes": 65803998,
+        "buckets": {
+          "tiny": {
+            "count_bytecodes": 141,
+            "count_skeletons": 57,
+            "reduction_ratio": 0.5957446808510638,
+            "mean_size": 57.212765957446805,
+            "raw_bytes": 8067
+          },
+          "large": {
+            "count_bytecodes": 2357,
+            "count_skeletons": 2060,
+            "reduction_ratio": 0.1260076368264743,
+            "mean_size": 9088.368264743318,
+            "raw_bytes": 21421284
+          },
+          "huge": {
+            "count_bytecodes": 1888,
+            "count_skeletons": 1122,
+            "reduction_ratio": 0.4057203389830508,
+            "mean_size": 21188.634533898305,
+            "raw_bytes": 40004142
+          },
+          "medium": {
+            "count_bytecodes": 1448,
+            "count_skeletons": 1167,
+            "reduction_ratio": 0.19406077348066297,
+            "mean_size": 2919.7941988950274,
+            "raw_bytes": 4227862
+          },
+          "small": {
+            "count_bytecodes": 312,
+            "count_skeletons": 153,
+            "reduction_ratio": 0.5096153846153846,
+            "mean_size": 457.18910256410254,
+            "raw_bytes": 142643
+          }
+        }
+      }
+    },
+    {
+      "window_id": 7,
+      "start_block": 95904884,
+      "end_block": 95905884,
+      "metrics": {
+        "unique_bytecodes": 713,
+        "unique_skeletons": 507,
+        "reduction_ratio": 0.2889200561009818,
+        "push_immediate_bytes": 3212456,
+        "total_opcode_bytes": 4509225,
+        "raw_bytes": 7721681,
+        "buckets": {
+          "huge": {
+            "count_bytecodes": 223,
+            "count_skeletons": 104,
+            "reduction_ratio": 0.5336322869955157,
+            "mean_size": 21034.820627802692,
+            "raw_bytes": 4690765
+          },
+          "small": {
+            "count_bytecodes": 27,
+            "count_skeletons": 19,
+            "reduction_ratio": 0.2962962962962963,
+            "mean_size": 502.18518518518516,
+            "raw_bytes": 13559
+          },
+          "tiny": {
+            "count_bytecodes": 54,
+            "count_skeletons": 44,
+            "reduction_ratio": 0.18518518518518523,
+            "mean_size": 70.12962962962963,
+            "raw_bytes": 3787
+          },
+          "medium": {
+            "count_bytecodes": 130,
+            "count_skeletons": 111,
+            "reduction_ratio": 0.1461538461538462,
+            "mean_size": 3059.5461538461536,
+            "raw_bytes": 397741
+          },
+          "large": {
+            "count_bytecodes": 279,
+            "count_skeletons": 229,
+            "reduction_ratio": 0.1792114695340502,
+            "mean_size": 9375.731182795698,
+            "raw_bytes": 2615829
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 5933,
+        "unique_skeletons": 4325,
+        "reduction_ratio": 0.2710264621607955,
+        "push_immediate_bytes": 24990143,
+        "total_opcode_bytes": 38847724,
+        "raw_bytes": 63837867,
+        "buckets": {
+          "small": {
+            "count_bytecodes": 313,
+            "count_skeletons": 156,
+            "reduction_ratio": 0.5015974440894568,
+            "mean_size": 461.0990415335463,
+            "raw_bytes": 144324
+          },
+          "large": {
+            "count_bytecodes": 2260,
+            "count_skeletons": 1960,
+            "reduction_ratio": 0.1327433628318584,
+            "mean_size": 9109.176991150442,
+            "raw_bytes": 20586740
+          },
+          "huge": {
+            "count_bytecodes": 1845,
+            "count_skeletons": 1067,
+            "reduction_ratio": 0.42168021680216805,
+            "mean_size": 21201.30460704607,
+            "raw_bytes": 39116407
+          },
+          "tiny": {
+            "count_bytecodes": 132,
+            "count_skeletons": 58,
+            "reduction_ratio": 0.5606060606060606,
+            "mean_size": 58.60606060606061,
+            "raw_bytes": 7736
+          },
+          "medium": {
+            "count_bytecodes": 1383,
+            "count_skeletons": 1085,
+            "reduction_ratio": 0.21547360809833693,
+            "mean_size": 2879.7252349963846,
+            "raw_bytes": 3982660
+          }
+        }
+      }
+    },
+    {
+      "window_id": 8,
+      "start_block": 95905884,
+      "end_block": 95906884,
+      "metrics": {
+        "unique_bytecodes": 654,
+        "unique_skeletons": 470,
+        "reduction_ratio": 0.2813455657492355,
+        "push_immediate_bytes": 2784556,
+        "total_opcode_bytes": 3848332,
+        "raw_bytes": 6632888,
+        "buckets": {
+          "large": {
+            "count_bytecodes": 263,
+            "count_skeletons": 217,
+            "reduction_ratio": 0.17490494296577952,
+            "mean_size": 8808.300380228136,
+            "raw_bytes": 2316583
+          },
+          "medium": {
+            "count_bytecodes": 130,
+            "count_skeletons": 105,
+            "reduction_ratio": 0.1923076923076923,
+            "mean_size": 3047.146153846154,
+            "raw_bytes": 396129
+          },
+          "tiny": {
+            "count_bytecodes": 39,
+            "count_skeletons": 36,
+            "reduction_ratio": 0.07692307692307687,
+            "mean_size": 73.0,
+            "raw_bytes": 2847
+          },
+          "huge": {
+            "count_bytecodes": 189,
+            "count_skeletons": 88,
+            "reduction_ratio": 0.5343915343915344,
+            "mean_size": 20656.460317460318,
+            "raw_bytes": 3904071
+          },
+          "small": {
+            "count_bytecodes": 33,
+            "count_skeletons": 24,
+            "reduction_ratio": 0.2727272727272727,
+            "mean_size": 401.75757575757575,
+            "raw_bytes": 13258
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 6170,
+        "unique_skeletons": 4513,
+        "reduction_ratio": 0.2685575364667747,
+        "push_immediate_bytes": 25754352,
+        "total_opcode_bytes": 39958975,
+        "raw_bytes": 65713327,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 1479,
+            "count_skeletons": 1150,
+            "reduction_ratio": 0.22244759972954697,
+            "mean_size": 2861.1541582150103,
+            "raw_bytes": 4231647
+          },
+          "large": {
+            "count_bytecodes": 2327,
+            "count_skeletons": 2025,
+            "reduction_ratio": 0.12978083369144822,
+            "mean_size": 9071.189514396217,
+            "raw_bytes": 21108658
+          },
+          "small": {
+            "count_bytecodes": 329,
+            "count_skeletons": 155,
+            "reduction_ratio": 0.5288753799392097,
+            "mean_size": 441.0729483282675,
+            "raw_bytes": 145113
+          },
+          "huge": {
+            "count_bytecodes": 1907,
+            "count_skeletons": 1128,
+            "reduction_ratio": 0.4084950183534347,
+            "mean_size": 21090.947037231253,
+            "raw_bytes": 40220436
+          },
+          "tiny": {
+            "count_bytecodes": 128,
+            "count_skeletons": 56,
+            "reduction_ratio": 0.5625,
+            "mean_size": 58.3828125,
+            "raw_bytes": 7473
+          }
+        }
+      }
+    },
+    {
+      "window_id": 9,
+      "start_block": 95906884,
+      "end_block": 95907884,
+      "metrics": {
+        "unique_bytecodes": 615,
+        "unique_skeletons": 404,
+        "reduction_ratio": 0.343089430894309,
+        "push_immediate_bytes": 2724665,
+        "total_opcode_bytes": 3775547,
+        "raw_bytes": 6500212,
+        "buckets": {
+          "medium": {
+            "count_bytecodes": 148,
+            "count_skeletons": 95,
+            "reduction_ratio": 0.3581081081081081,
+            "mean_size": 3151.5675675675675,
+            "raw_bytes": 466432
+          },
+          "huge": {
+            "count_bytecodes": 180,
+            "count_skeletons": 87,
+            "reduction_ratio": 0.5166666666666666,
+            "mean_size": 20811.705555555556,
+            "raw_bytes": 3746107
+          },
+          "small": {
+            "count_bytecodes": 10,
+            "count_skeletons": 10,
+            "reduction_ratio": 0.0,
+            "mean_size": 400.8,
+            "raw_bytes": 4008
+          },
+          "large": {
+            "count_bytecodes": 249,
+            "count_skeletons": 185,
+            "reduction_ratio": 0.2570281124497992,
+            "mean_size": 9163.076305220884,
+            "raw_bytes": 2281606
+          },
+          "tiny": {
+            "count_bytecodes": 28,
+            "count_skeletons": 27,
+            "reduction_ratio": 0.0357142857142857,
+            "mean_size": 73.53571428571429,
+            "raw_bytes": 2059
+          }
+        }
+      },
+      "metrics_local": {
+        "unique_bytecodes": 6079,
+        "unique_skeletons": 4430,
+        "reduction_ratio": 0.271261720677743,
+        "push_immediate_bytes": 25395626,
+        "total_opcode_bytes": 39454894,
+        "raw_bytes": 64850520,
+        "buckets": {
+          "tiny": {
+            "count_bytecodes": 130,
+            "count_skeletons": 49,
+            "reduction_ratio": 0.6230769230769231,
+            "mean_size": 56.323076923076925,
+            "raw_bytes": 7322
+          },
+          "medium": {
+            "count_bytecodes": 1444,
+            "count_skeletons": 1105,
+            "reduction_ratio": 0.23476454293628812,
+            "mean_size": 2888.211218836565,
+            "raw_bytes": 4170577
+          },
+          "huge": {
+            "count_bytecodes": 1846,
+            "count_skeletons": 1105,
+            "reduction_ratio": 0.4014084507042254,
+            "mean_size": 21147.89869989166,
+            "raw_bytes": 39039021
+          },
+          "large": {
+            "count_bytecodes": 2366,
+            "count_skeletons": 2029,
+            "reduction_ratio": 0.14243448858833474,
+            "mean_size": 9087.215553677092,
+            "raw_bytes": 21500352
+          },
+          "small": {
+            "count_bytecodes": 293,
+            "count_skeletons": 142,
+            "reduction_ratio": 0.515358361774744,
+            "mean_size": 454.77133105802045,
+            "raw_bytes": 133248
+          }
+        }
+      }
+    }
+  ]
+}

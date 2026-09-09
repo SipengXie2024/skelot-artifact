@@ -1,0 +1,9 @@
+ADDRESS
+PUSH20 0xffffffffffffffffffffffffffffffffffffffff
+AND
+
+; CHECK: load i160
+; CHECK: [[ADDR:%.*]] = zext i160 {{.*}} to i256
+; CHECK-NOT: and
+; CHECK: store i256 [[ADDR]]
+; CHECK: ret i8

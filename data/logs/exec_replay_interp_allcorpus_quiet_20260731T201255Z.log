@@ -1,0 +1,87 @@
+=== Skeleton vs Per-Hash Frame-Level Benchmark ===
+Blocks: 10000 sampled (38004930 to 38014929, every 1)
+Rounds: 1 measured, 0 warmup
+
+--- Phase 1: Loading per-hash .so files ---
+  (skipped — interpreter mode)
+  Loaded 0 per-hash functions in 0.00s
+
+--- Phase 2: Loading skeleton registry from /home/ubuntu/sipeng/skelot-paper/data/skeleton_registry_full_emse.bin ---
+  Using cached data tables (no bytecode scan)
+  171 skeleton families loaded from registry in 0.01s
+
+--- Phase 3: Loading skeleton .so files ---
+  (skipped — mode interpreter)
+  0 skeleton-dispatched contracts in 0.00s
+[cache] loaded bytecodes (19130 entries) from /home/ubuntu/.cache/skelot_index/bytecodes_bench_data_base_38004930_10000.bin
+
+--- Treatment group: 19130 contracts ---
+
+--- Phase 5: Measuring 10000 blocks (only_mode=interpreter) ---
+MEASUREMENT_PHASE_BEGIN only_mode=interpreter
+  [10/10000] block 38004939 done
+  [20/10000] block 38004949 done
+  [30/10000] block 38004959 done
+  [40/10000] block 38004969 done
+  [50/10000] block 38004979 done
+  [60/10000] block 38004989 done
+  [70/10000] block 38004999 done
+  [80/10000] block 38005009 done
+  [90/10000] block 38005019 done
+  [100/10000] block 38005029 done
+  [110/10000] block 38005039 done
+  [120/10000] block 38005049 done
+  [130/10000] block 38005059 done
+  [140/10000] block 38005069 done
+  [150/10000] block 38005079 done
+  [160/10000] block 38005089 done
+  [170/10000] block 38005099 done
+  [180/10000] block 38005109 done
+  [190/10000] block 38005119 done
+  [200/10000] block 38005129 done
+  [210/10000] block 38005139 done
+  [220/10000] block 38005149 done
+  [230/10000] block 38005159 done
+  [240/10000] block 38005169 done
+  [250/10000] block 38005179 done
+  [260/10000] block 38005189 done
+  [270/10000] block 38005199 done
+  [280/10000] block 38005209 done
+  [290/10000] block 38005219 done
+  [300/10000] block 38005229 done
+  [310/10000] block 38005239 done
+  [320/10000] block 38005249 done
+  [330/10000] block 38005259 done
+  [340/10000] block 38005269 done
+  [350/10000] block 38005279 done
+  [360/10000] block 38005289 done
+  [370/10000] block 38005299 done
+  [380/10000] block 38005309 done
+  [390/10000] block 38005319 done
+  [400/10000] block 38005329 done
+  [410/10000] block 38005339 done
+  [420/10000] block 38005349 done
+  [430/10000] block 38005359 done
+  [440/10000] block 38005369 done
+  [450/10000] block 38005379 done
+  [460/10000] block 38005389 done
+  [470/10000] block 38005399 done
+  [480/10000] block 38005409 done
+  [490/10000] block 38005419 done
+  [500/10000] block 38005429 done
+  [510/10000] block 38005439 done
+  [520/10000] block 38005449 done
+  [530/10000] block 38005459 done
+  [540/10000] block 38005469 done
+  [550/10000] block 38005479 done
+  [560/10000] block 38005489 done
+  [570/10000] block 38005499 done
+  [580/10000] block 38005509 done
+  [590/10000] block 38005519 done
+  [600/10000] block 38005529 done
+  [610/10000] block 38005539 done
+  [620/10000] block 38005549 done
+  [630/10000] block 38005559 done
+  [640/10000] block 38005569 done
+  [650/10000] block 38005579 done
+  [660/10000] block 38005589 done

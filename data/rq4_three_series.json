@@ -1,0 +1,59 @@
+{
+  "total_exec_us": 316493022.3830001,
+  "rows": [
+    {
+      "target": 0.5,
+      "skelot_units": 9,
+      "skelot_mb": 3.07532,
+      "naive_units": 14,
+      "naive_mb": 5.128464,
+      "match_units": 3386,
+      "match_mb": 1827.688904
+    },
+    {
+      "target": 0.75,
+      "skelot_units": 35,
+      "skelot_mb": 4.243784,
+      "naive_units": 67,
+      "naive_mb": 25.163136,
+      "match_units": 3933,
+      "match_mb": 1852.68
+    },
+    {
+      "target": 0.9,
+      "skelot_units": 144,
+      "skelot_mb": 12.810312,
+      "naive_units": 348,
+      "naive_mb": 125.304736,
+      "match_units": 4885,
+      "match_mb": 2153.98732
+    },
+    {
+      "target": 0.95,
+      "skelot_units": 341,
+      "skelot_mb": 20.81624,
+      "naive_units": 851,
+      "naive_mb": 289.672544,
+      "match_units": 5671,
+      "match_mb": 2290.387104
+    },
+    {
+      "target": 0.99,
+      "skelot_units": 1229,
+      "skelot_mb": 43.756728,
+      "naive_units": 3034,
+      "naive_mb": 1024.624368,
+      "match_units": 7622,
+      "match_mb": 2710.158544
+    },
+    {
+      "target": 1.0,
+      "skelot_units": 10037,
+      "skelot_mb": 2150.985344,
+      "naive_units": 19130,
+      "naive_mb": 5049.543264,
+      "match_units": 19130,
+      "match_mb": 5049.543264
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# The camera-ready runs used the `1.91` rustup channel (see SKELOT-CHANGES.md
+# for what is and is not recorded about the patch level).
+[toolchain]
+channel = "1.91"
+profile = "minimal"
+components = ["rustfmt", "clippy"]

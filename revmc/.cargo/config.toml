@@ -1,0 +1,6 @@
+# The revm dependency is a git fork. Cargo's built-in git transport fails on
+# some networks and behind proxies; the git CLI honours the ambient config.
+# On the measurement machine this line lived in the user's ~/.cargo/config.toml
+# and was therefore invisible to a fresh clone.
+[net]
+git-fetch-with-cli = true
