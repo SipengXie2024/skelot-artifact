@@ -59,8 +59,8 @@ compiler and from bug fixes that happen to live in the same tree, and
 Two things about this machine matter for reproduction. First, both arms of every
 comparison ran on it, at the same thread count, so the comparisons are internally
 consistent even where absolute numbers would move on other hardware. Second, the
-hardware-counter attribution in Table 5 could not be measured on it at all; see
-Section 9.
+hardware-counter attribution in Table 5 needs CPU events this machine does not
+expose; see Section 9.
 
 ---
 
@@ -195,8 +195,10 @@ Ordered. Each step needs everything above it, except where noted. Durations are
 what the campaign logs recorded on the machine in Section 2. Peak memory was not
 instrumented for any of these runs; the only memory record in the whole project
 is from an earlier, 8-thread compile, which peaked at 2,324 MB resident. All
-memory figures below are therefore **UNKNOWN**, with the observation that no run
-is known to have come close to exhausting 30 GiB.
+memory figures below are therefore **UNKNOWN** unless stated, with the observation
+that no run is known to have come close to exhausting 30 GiB. Two current-boundary
+runs were measured with `/usr/bin/time -v`: the paired replay peaked at 1.9 GB
+and the Ethereum variance pass at 1.2 GB.
 
 ### 6.1 Corpus scan, for Table 1, Table 2, Section 6.1 and Figure 2
 
@@ -320,9 +322,10 @@ export ALCHEMY_API_KEY=...                # or RPC_URL=<your archive endpoint>
 ./scripts/run_xchain.sh base spans        # and eth, bsc, arb
 ```
 
-The variance pass over Base took 2.6 h single-threaded. The Ethereum, BSC and
-Arbitrum durations are **UNKNOWN**; only two variance logs were archived, and
-one of them carries no timestamp in its name.
+The variance pass over Base took 2.6 h single-threaded. Ethereum took 242.6 s
+with 1.2 GB peak RSS and Arbitrum 18.2 s with 77 MB (logs
+`push_variance_emse_{eth,arb}_20260909*.log`, run through `run_xchain.sh`); the
+BSC duration is UNKNOWN because its archived log carries no timestamps.
 
 The deployment-span runs need network access to an archive RPC endpoint, because
 they resolve family members back to their deployment blocks. Base took 742.5 s,
@@ -396,7 +399,7 @@ and the field to read.
 | Family 93.8 s and 84.8 s, Other 365.2 s and 365.8 s | `scripts/family_exec_split.py` | stdout |
 | Family build 1.1 s | `run_family_stats.sh grouping` | the 0.78 s grouping and 0.305 s classification lines |
 | 3.4 million nested same-family frames | `nested_family_count_emse_base10k_FINAL.json` | `same_family_ancestor_descendant`, 3,395,783 |
-| 869 faster, 544 equivalent, 65 slower, median 1.17 times | `paired_stats_recomputed.json` | `summary.verdicts_bh_fdr_q05`, `summary.speedup_median` |
+| 1,171 faster, 644 equivalent, 27 slower, median 1.31 times | `paired_stats_emse_sampled100_20260909.json` | `summary.verdicts_bh_fdr_q05`, `summary.speedup_median` |
 
 ### RQ1, RQ4 and the registry
 
@@ -435,20 +438,11 @@ research contribution and are grouped separately in `SKELOT-CHANGES.md`.
 
 ### The paired runtime comparison
 
-[[RQ3-PROVENANCE: decision pending]]
-
-<!-- Replace this marker before submission. It has to say where
-     data/skeleton_vs_perhash.json and data/paired_stats_recomputed.json came
-     from, and what an evaluator who runs "run_stage_replay.sh paired" against
-     a freshly built cache should expect to see instead. -->
+The paper's RQ3 numbers (1,842 invoked family members over 99 sampled blocks, 1,171 faster / 644 equivalent / 27 slower after Benjamini-Hochberg correction, median speedup 1.31x with bootstrap 95% CI [1.286, 1.345], median dispatch 23.08 us under Naive AOT against 18.12 us under SkelOT, and the Section 7.1 family-size strata 1.07x / 1.58x) come from `data/paired_emse_base_sampled100_20260909T065454Z.json`, produced by `skeleton_vs_perhash_bench` under the EMSE boundary on the machine in Section 2 with the sorted-schedule compile caches, and recomputed into `data/paired_stats_emse_sampled100_20260909.json` by `scripts/recompute_paired_stats.py`. The run took 2 min 28 s and 1.9 GB peak RSS; its log with the toolchain banner is `data/logs/paired_emse_base_sampled100_20260909T065454Z.log`. An evaluator who runs `run_stage_replay.sh paired` against a freshly built cache and then `recompute_paired_stats.py` should see the same member count and verdict split up to a handful of contracts, and a median in the same range; the absolute microsecond figures depend on the host and are expected to differ.
 
 ### The hardware-counter attribution in Table 5
 
-[[TABLE5: hardware-capability wording]]
-
-<!-- Replace this marker before submission. It has to say which CPU features
-     the counters behind Table 5 require, and what an evaluator whose machine
-     does not expose them should do. -->
+Table 5 reports top-down slot accounting (retiring, bad speculation, frontend bound, backend bound) read around every AOT call with `perf_event_open`. Reproducing it needs a CPU that exposes the top-down slot events (Intel Sapphire Rapids class or newer) and permission to open hardware counters (`perf_event_paranoid` at most 1, or `CAP_PERFMON`); in a container this means running on such a host with `--privileged`. We measured it on a Sapphire Rapids class host; the machine listed in Section 2 does not expose these events. The shipped files `data/perf_p1_summary.json` and `data/perf_frontend_attribution_summary.json` hold the aggregated per-call deltas that Table 5 prints, and `data/perf_frontend_attribution_notes.md` records the event codes and the protocol (repeated paired measurements after warmup; CPU frequency and ASLR not pinned). An evaluator without such a CPU can check that the table rows follow from the summary files but cannot re-measure them; treat Table 5 as an optional, hardware-gated reproduction.
 
 ### Figure 2
 

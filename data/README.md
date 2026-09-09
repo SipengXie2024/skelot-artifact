@@ -43,7 +43,7 @@ mixing the two produces numbers that appear in no version of the paper.
 | `exclusive_per_block_base10k.tsv.zst` | Per-contract exclusive execution time, the weight file behind Figure 8, the RQ4 ratios and the coverage split. 270 MB uncompressed, 14 MB here; the scripts decompress it on the fly, and `zstd -d` gives you the plain file if you want it. |
 | `nested_family_count_emse_base10k_FINAL.json` | The nested same-family frame count in Section 6.3 |
 | `skeleton_registry_full_emse.bin` | The registry sizes in Section 6.1. Inspect it with `scripts/run_family_stats.sh registry data/skeleton_registry_full_emse.bin`. |
-| `skeleton_vs_perhash.json`, `paired_stats_recomputed.json` | RQ3, Figure 7, and the family-size strata in Section 7.1. See the provenance note in the artifact README. |
+| `paired_emse_base_sampled100_20260909T065454Z.json`, `paired_stats_emse_sampled100_20260909.json` | RQ3, Figure 7, and the family-size strata in Section 7.1 (raw paired samples and the Benjamini-Hochberg recomputation). See the provenance note in the artifact README. |
 
 ## Cross-chain and identification
 
@@ -63,8 +63,8 @@ mixing the two produces numbers that appear in no version of the paper.
 `logs/` holds the run logs from the measurement campaign. For most steps the
 log's launch timestamp and its modification time are the only wall-clock record,
 which is why the README quotes durations to the nearest minute rather than
-claiming an internal timer. `skeleton_vs_perhash_v4.log` is older than the
-rest and is kept because it is the only provenance for the paired numbers.
+claiming an internal timer. The paired replay log `paired_emse_base_sampled100_20260909T065454Z.log` carries a
+toolchain banner and `/usr/bin/time -v` output.
 
 ## Two files that are deliberately not shipped
 

@@ -27,7 +27,7 @@ RC = {"font.size": 11, "axes.labelsize": 12, "axes.titlesize": 12,
 
 
 def main():
-    doc = json.loads(inp("paired_stats_recomputed.json").read_text())
+    doc = json.loads(inp("paired_stats_emse_sampled100_20260909.json").read_text())
     speedups = [c["speedup_ratio"] for c in doc["per_contract"]
                 if c.get("speedup_ratio") is not None]
     if not speedups:
