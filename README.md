@@ -129,7 +129,9 @@ artifact.
 
 ## 4. Minimal working example
 
-About ten minutes, of which two are the build.
+About 13 minutes on the machine above: one to three minutes to build the runner,
+and about twelve minutes in the single-block check, which compiles the roughly
+300 contracts that block touches. Measured inside the Docker image on 2026-09-09.
 
 ```bash
 ./data/fetch_data.sh --smoke base     # ~100 MB, 20 blocks of Base
@@ -144,8 +146,8 @@ Expected output, from the same slice on the measurement machine.
 
 | Step | Expect |
 |---|---|
-| Grouping over 20 blocks (1,718 compilable bytecodes) | about 70 families covering 507 members, 1,211 per-hash units, g1 rejecting 16 skeletons and 51 members, 0 hash-collision splits |
-| Single-block replay at block 38,004,930 | 16 families over 61 members, 228 of 228 transactions matching, gas 30886502 reported EQUAL, PASS |
+| Grouping over 20 blocks (1,718 compilable bytecodes) | 91 multi-member families covering 578 members, 1,140 per-hash units, 1,231 compile units in total, g1 and g2 rejecting nothing on this slice, 0 hash-collision splits |
+| Single-block replay at block 38,004,930 | 304 codes and 228 transactions loaded, 18 skeleton groups over 67 contracts, 228 of 228 transactions matching, gas 30886502 reported EQUAL |
 
 Small drift in the family counts is expected only if you change the block slice.
 Given the same slice these are exact counts, not measurements, so they should

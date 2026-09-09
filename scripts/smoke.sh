@@ -24,8 +24,8 @@ echo "[1/3] building the runner (release)"
 
 echo
 echo "[2/3] family grouping and admission guards over 20 blocks"
-echo "      expect around 70 families covering 507 members, 1,211 per-hash units,"
-echo "      g1 rejecting 16 skeletons (51 members), and 0 hash-collision splits"
+echo "      expect 91 multi-member families covering 578 members, 1,140 per-hash units,"
+echo "      1,231 compile units, no g1/g2 rejections on this slice, 0 hash-collision splits"
 "$(runner_bin grouping_stats)" \
     --bench-dir "${BENCH_DIR}" \
     --start-block "${START}" --block-count 20 \
@@ -33,7 +33,7 @@ echo "      g1 rejecting 16 skeletons (51 members), and 0 hash-collision splits"
 
 echo
 echo "[3/3] single-block execution check, both designs against the interpreter"
-echo "      expect 16 families / 61 members and 228/228 transactions matching"
+echo "      expect 18 skeleton groups over 67 contracts and 228/228 transactions matching"
 echo "      with gas 30886502 EQUAL"
 "$(runner_bin skeleton_bench)" \
     --bench-dir "${BENCH_DIR}" \
