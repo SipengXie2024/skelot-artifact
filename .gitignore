@@ -1,10 +1,11 @@
-# Everything a run produces. The reference results are in data/.
-/results/*
+
 !/results/.gitkeep
-
 # Corpora and the compiled artifact caches: tens of gigabytes, fetched or built.
-/bench_data/
-/revmc/target/
-
-__pycache__/
+# Everything a run produces. The reference results are in data/.
 *.pyc
+/bench_data/
+/results/*
+/revmc/target/
+__pycache__/
+jit_cache/
+results/

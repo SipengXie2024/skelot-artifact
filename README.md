@@ -134,13 +134,19 @@ and about twelve minutes in the single-block check, which compiles the roughly
 300 contracts that block touches. Measured inside the Docker image on 2026-09-09.
 
 ```bash
-./data/fetch_data.sh --smoke base     # ~100 MB, 20 blocks of Base
+./data/fetch_data.sh --smoke base     # 6 MB download, 20 blocks of Base (87 MB unpacked)
 ./scripts/smoke.sh
 ```
 
 The smoke script builds the runner, groups a 20-block slice of the Base corpus
 into families, and then replays one block under the interpreter, Naive per-hash
 AOT, and SkelOT, comparing the results.
+
+The single-block check compiles the roughly 300 contracts that block touches and
+keeps the objects in `results/smoke/jit_cache/`. The first run therefore takes
+about twelve minutes; a rerun finds every object in that cache and finishes in
+about a second with `to_compile=0` on its `Cache:` lines. Delete the directory
+to exercise the compile path again. The repository ships no compiled objects.
 
 Expected output, from the same slice on the measurement machine.
 
@@ -175,8 +181,11 @@ anything is unpacked.
 BENCH_ROOT=/mnt/big ./data/fetch_data.sh base     # or eth, bsc, arb, all
 ```
 
-The script downloads with `gdown` or a configured `rclone` remote, verifies the
-checksum, and unpacks. You can also download the four files in a browser and
+The script downloads each archive by its Google Drive file id with `gdown`
+(`setup.sh` and the Dockerfile install it; `gdown>=5.2`) or a configured `rclone`
+remote, verifies the checksum, and unpacks. It fetches only the archives you ask
+for; `--smoke` fetches a separate 6 MB archive holding just the 20-block slice.
+You can also download the files in a browser from the folder link above and
 drop them in `$BENCH_ROOT/archives`, in which case the script only verifies and
 unpacks.
 

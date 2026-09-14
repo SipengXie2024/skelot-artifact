@@ -3,7 +3,7 @@
 #
 #   ./fetch_data.sh base            # states/ and txs/ for Base, ~48 GB unpacked
 #   ./fetch_data.sh all             # all four chains, ~99 GB unpacked
-#   ./fetch_data.sh --smoke base    # only the 20 blocks the smoke test needs
+#   ./fetch_data.sh --smoke base    # 6 MB download, the 20 blocks the smoke test needs (87 MB unpacked)
 #   FULL_TREE=1 ./fetch_data.sh base    # the whole archived tree, 83 GB
 #
 # Environment:
@@ -27,8 +27,9 @@
 # with a .sha256 and a .list.txt beside each one. Expected sha256 values are in
 # bench_data.sha256 next to this script and are checked before any extraction.
 #
-# The script downloads with gdown (pip install gdown) or, if you have a remote
-# configured for the folder, with rclone. Both fetch the whole folder; there is
+# The script downloads each archive by its Drive file id with gdown (installed by
+# setup.sh and the Dockerfile) or, if you have a remote configured for the folder,
+# with rclone. Only the archives you ask for are fetched; there is
 # no per-file link. You can also download the four files by hand in a browser
 # and drop them into ARCHIVE_DIR, in which case this script only verifies and
 # unpacks.
@@ -59,33 +60,46 @@ esac
 command -v zstd >/dev/null || { echo "zstd is required (apt install zstd)" >&2; exit 1; }
 mkdir -p "${ARCHIVE_DIR}" "${BENCH_ROOT}"
 
-download_folder() {
-    local missing=0
-    for c in "${CHAINS[@]}"; do
-        [[ -f "${ARCHIVE_DIR}/bench_data_${c}.tar.zst" ]] || missing=1
-    done
-    [[ "${missing}" -eq 0 ]] && return 0
+# Google Drive file ids inside the shared folder (rclone lsjson, 2026-09-14).
+drive_id() {
+    case "$1" in
+        base)    echo 1__uy69r6laQCSgdJ5SAPnEsUMXl-m04k ;;
+        eth)     echo 1y_yYMegsJ8Cipck0XprtcgExAOAJBo68 ;;
+        bsc)     echo 16FM-h_dZAvdCEdclYsUYiP4Ge9Yh-qn- ;;
+        arb)     echo 1LZXkJyGspYnqH1_udH0qaSSCt7adbzKf ;;
+        smoke20) echo 13HQImDrcHgOC1YVegH7e99Q1HOtFw0Mo ;;
+    esac
+}
 
+fetch_one() {
+    local name="$1" id="$2"
+    local dst="${ARCHIVE_DIR}/${name}"
+    [[ -f "${dst}" ]] && return 0
     if [[ -n "${RCLONE_REMOTE}" ]] && command -v rclone >/dev/null; then
-        echo "==> rclone copy ${RCLONE_REMOTE} -> ${ARCHIVE_DIR}"
-        for c in "${CHAINS[@]}"; do
-            rclone copy "${RCLONE_REMOTE}/bench_data_${c}.tar.zst" "${ARCHIVE_DIR}/" --progress
-        done
+        echo "==> rclone copy ${RCLONE_REMOTE}/${name} -> ${ARCHIVE_DIR}"
+        rclone copy "${RCLONE_REMOTE}/${name}" "${ARCHIVE_DIR}/" --progress
     elif command -v gdown >/dev/null; then
-        echo "==> gdown --folder ${FOLDER_URL} -> ${ARCHIVE_DIR}"
-        echo "    (this fetches every archive in the folder, about 4.8 GB)"
-        gdown --folder "${FOLDER_URL}" -O "${ARCHIVE_DIR}" --remaining-ok
-        # gdown puts the folder's contents in a subdirectory named after it.
-        find "${ARCHIVE_DIR}" -mindepth 2 -maxdepth 2 -name 'bench_data_*' \
-            -exec mv -n {} "${ARCHIVE_DIR}/" \;
+        echo "==> gdown ${name} (Drive id ${id}) -> ${ARCHIVE_DIR}"
+        gdown "https://drive.google.com/uc?id=${id}" -O "${dst}"
     else
         echo "neither gdown nor a configured rclone remote is available." >&2
-        echo "Install gdown (pip install gdown), or set RCLONE_REMOTE, or" >&2
-        echo "download the archives by hand from" >&2
+        echo "setup.sh and the Dockerfile install gdown; otherwise" >&2
+        echo "  python3 -m pip install --break-system-packages 'gdown>=5.2'" >&2
+        echo "or download ${name} by hand from" >&2
         echo "  ${FOLDER_URL}" >&2
         echo "into ${ARCHIVE_DIR} and re-run." >&2
         exit 1
     fi
+}
+
+download_archives() {
+    if [[ "${SMOKE}" -eq 1 ]]; then
+        fetch_one bench_data_base_smoke20.tar.zst "$(drive_id smoke20)"
+        return 0
+    fi
+    for c in "${CHAINS[@]}"; do
+        fetch_one "bench_data_${c}.tar.zst" "$(drive_id "${c}")"
+    done
 }
 
 verify() {
@@ -135,7 +149,22 @@ start_block_of() {
     esac
 }
 
-download_folder
+download_archives
+
+if [[ "${SMOKE}" -eq 1 ]]; then
+    # The smoke archive holds only blocks 38004930..38004949 of Base (states and
+    # txs, 87 MB unpacked); unpack it whole.
+    name=bench_data_base_smoke20.tar.zst
+    want="$(awk -v f="${name}" '$2 == f {print $1}' "${HERE}/bench_data.sha256")"
+    got="$(sha256sum "${ARCHIVE_DIR}/${name}" | awk '{print $1}')"
+    [[ "${got}" == "${want}" ]] || { echo "sha256 mismatch for ${name}: got ${got}, want ${want}" >&2; exit 1; }
+    echo "==> unpacking the 20-block smoke slice into ${BENCH_ROOT}"
+    tar --use-compress-program='zstd -d --long=31' -xf "${ARCHIVE_DIR}/${name}" -C "${BENCH_ROOT}"
+    echo "    $(du -sh "${BENCH_ROOT}/bench_data_base" | cut -f1) in ${BENCH_ROOT}/bench_data_base"
+    echo "Smoke slice ready. export BENCH_ROOT=${BENCH_ROOT}"
+    exit 0
+fi
+
 for c in "${CHAINS[@]}"; do
     verify "${c}"
     archive="${ARCHIVE_DIR}/bench_data_${c}.tar.zst"

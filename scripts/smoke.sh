@@ -18,6 +18,11 @@ CHAIN=base
 START=38004930
 BENCH_DIR="$(corpus_dir "${CHAIN}")"
 LOG="${RESULTS_ROOT}/logs/smoke_$(skelot_stamp).log"
+# skeleton_bench keeps its compiled objects in ./jit_cache. Run from a directory
+# under RESULTS_ROOT so the first run compiles and a rerun hits that cache;
+# delete "${RESULTS_ROOT}/smoke/jit_cache" to force recompilation.
+mkdir -p "${RESULTS_ROOT}/smoke"
+cd "${RESULTS_ROOT}/smoke"
 
 echo "[1/3] building the runner (release)"
 (cd "${REVMC_ROOT}" && cargo build --release -p revmc-examples-runner) 2>&1 | tee -a "${LOG}"

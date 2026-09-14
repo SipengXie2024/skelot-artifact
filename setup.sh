@@ -33,7 +33,11 @@ ${SUDO} apt-get install -y --no-install-recommends \
     clang-21 clang-tools-21 libclang-common-21-dev libclang-cpp21 \
     libclang1-21 libclang-rt-21-dev libpolly-21-dev lld-21 \
     libzstd-dev \
-    python3 python3-matplotlib python3-numpy python3-scipy
+    python3 python3-pip python3-matplotlib python3-numpy python3-scipy
+
+# gdown fetches the corpus archives from Google Drive (data/fetch_data.sh).
+# It is not packaged by Ubuntu; the distro python is otherwise left alone.
+${SUDO} python3 -m pip install --break-system-packages 'gdown>=5.2'
 
 # Do NOT symlink lld-21 to /usr/bin/lld. revmc probes for a bare "lld" and
 # switches the linker if it finds one; the paper's artifacts were linked with

@@ -40,12 +40,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         clang-21 clang-tools-21 libclang-common-21-dev libclang-cpp21 \
         libclang1-21 libclang-rt-21-dev libpolly-21-dev lld-21 \
         libzstd-dev \
-        python3 python3-matplotlib python3-numpy python3-scipy && \
+        python3 python3-pip python3-matplotlib python3-numpy python3-scipy && \
     rm -rf /var/lib/apt/lists/*
 
 # The distro python packages are exactly the versions that produced the
 # figures: matplotlib 3.6.3, numpy 1.26.4, scipy 1.11.4. Installing them from
-# pip would drift, and Ubuntu 24.04 refuses a system-wide pip install anyway.
+# pip would drift, so only gdown (not packaged by Ubuntu) comes from pip.
+RUN python3 -m pip install --break-system-packages 'gdown>=5.2' && gdown --version
 
 ENV LLVM_SYS_211_PREFIX=/usr/lib/llvm-21
 ENV PATH=/usr/lib/llvm-21/bin:/root/.cargo/bin:$PATH
