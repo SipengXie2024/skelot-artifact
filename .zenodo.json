@@ -1,0 +1,8 @@
+{
+  "title": "SkelOT artifact: Reusing AOT Compilation Across EVM Contract Families (EuroSys 2027)",
+  "upload_type": "software",
+  "license": "MIT",
+  "creators": [{"name": "SkelOT artifact authors"}],
+  "description": "Artifact for the EuroSys 2027 paper \"SkelOT: Reusing AOT Compilation Across EVM Contract Families\": the SkelOT prototype (a fork of revmc), the experiment drivers and analysis scripts behind every number in the paper, precomputed results, a Dockerfile, and a README that maps each component to the paper. The block-window corpora it consumes are archived separately on Zenodo and linked from the README.",
+  "keywords": ["EVM", "ahead-of-time compilation", "smart contracts", "artifact evaluation", "EuroSys 2027"]
+}
