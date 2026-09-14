@@ -154,6 +154,7 @@ Expected output, from the same slice on the measurement machine.
 |---|---|
 | Grouping over 20 blocks (1,718 compilable bytecodes) | 91 multi-member families covering 578 members, 1,140 per-hash units, 1,231 compile units in total, g1 and g2 rejecting nothing on this slice, 0 hash-collision splits |
 | Single-block replay at block 38,004,930 | 304 codes and 228 transactions loaded, 18 skeleton groups over 67 contracts, 228 of 228 transactions matching, gas 30886502 reported EQUAL |
+| Runtime ratio printed by the same step | `Speedup vs native` between about 1.1x and 1.3x for both AOT arms; this is a sanity check on one block, not a paper result (see Section 9) |
 
 Small drift in the family counts is expected only if you change the block slice.
 Given the same slice these are exact counts, not measurements, so they should
@@ -450,6 +451,20 @@ research contribution and are grouped separately in `SKELOT-CHANGES.md`.
 ### The paired runtime comparison
 
 The paper's RQ3 numbers (1,842 invoked family members over 99 sampled blocks, 1,171 faster / 644 equivalent / 27 slower after Benjamini-Hochberg correction, median speedup 1.31x with bootstrap 95% CI [1.286, 1.345], median dispatch 23.08 us under Naive AOT against 18.12 us under SkelOT, and the Section 7.1 family-size strata 1.07x / 1.58x) come from `data/paired_emse_base_sampled100_20260909T065454Z.json`, produced by `skeleton_vs_perhash_bench` under the EMSE boundary on the machine in Section 2 with the sorted-schedule compile caches, and recomputed into `data/paired_stats_emse_sampled100_20260909.json` by `scripts/recompute_paired_stats.py`. The run took 2 min 28 s and 1.9 GB peak RSS; its log with the toolchain banner is `data/logs/paired_emse_base_sampled100_20260909T065454Z.log`. An evaluator who runs `run_stage_replay.sh paired` against a freshly built cache and then `recompute_paired_stats.py` should see the same member count and verdict split up to a handful of contracts, and a median in the same range; the absolute microsecond figures depend on the host and are expected to differ.
+
+### The single-block smoke ratio
+
+The smoke test prints a speedup over the interpreter for one block with five
+measured rounds. Treat it as a sanity check only. On our machine it read 1.14x
+(inside the Docker image, 2026-09-09) and 1.20x (native, 2026-09-14) for fresh
+compiles, and 1.21x when the same objects were loaded back from the cache a
+minute later, so on this host a cache hit and a fresh compile run the same.
+During kick-the-tires the evaluators saw 1.13x for a fresh compile and 1.27x
+for objects loaded from a cache we had accidentally shipped; we could not
+reproduce that gap and its cause is undetermined. Spreads of this size on a
+single block are expected; the paper's runtime claim (RQ3) rests on the paired
+comparison over 99 sampled blocks with Benjamini-Hochberg correction, not on
+this number.
 
 ### The hardware-counter attribution in Table 5
 
