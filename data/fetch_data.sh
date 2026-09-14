@@ -29,7 +29,8 @@
 #
 # The script downloads each archive by its Drive file id with gdown (installed by
 # setup.sh and the Dockerfile) or, if you have a remote configured for the folder,
-# with rclone. Only the archives you ask for are fetched; there is
+# with rclone, or from the Zenodo dataset (set USE_ZENODO=1 to prefer it).
+# Only the archives you ask for are fetched; there is
 # no per-file link. You can also download the four files by hand in a browser
 # and drop them into ARCHIVE_DIR, in which case this script only verifies and
 # unpacks.
@@ -78,9 +79,13 @@ fetch_one() {
     if [[ -n "${RCLONE_REMOTE}" ]] && command -v rclone >/dev/null; then
         echo "==> rclone copy ${RCLONE_REMOTE}/${name} -> ${ARCHIVE_DIR}"
         rclone copy "${RCLONE_REMOTE}/${name}" "${ARCHIVE_DIR}/" --progress
-    elif command -v gdown >/dev/null; then
+    elif command -v gdown >/dev/null && [[ -z "${USE_ZENODO:-}" ]]; then
         echo "==> gdown ${name} (Drive id ${id}) -> ${ARCHIVE_DIR}"
         gdown "https://drive.google.com/uc?id=${id}" -O "${dst}"
+    elif command -v curl >/dev/null; then
+        # Permanent copy: Zenodo record 10.5281/zenodo.22740636. Slower than Drive.
+        echo "==> curl ${name} from Zenodo -> ${ARCHIVE_DIR}"
+        curl -L --fail --retry 3 -o "${dst}" "https://zenodo.org/records/22740636/files/${name}?download=1"
     else
         echo "neither gdown nor a configured rclone remote is available." >&2
         echo "setup.sh and the Dockerfile install gdown; otherwise" >&2

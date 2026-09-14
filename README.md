@@ -16,6 +16,18 @@ reproducing them from the four block corpora.
 
 ---
 
+## Archival
+
+Code: this repository is archived on Zenodo, concept DOI
+[10.5281/zenodo.22740675](https://doi.org/10.5281/zenodo.22740675) (always the
+latest release) and version DOI
+[10.5281/zenodo.22740676](https://doi.org/10.5281/zenodo.22740676) for release
+v1.0.0. Data: the four corpus archives and the smoke archive are deposited as a
+Zenodo dataset, DOI [10.5281/zenodo.22740636](https://doi.org/10.5281/zenodo.22740636);
+`data/fetch_data.sh` falls back to it when Google Drive is unavailable.
+
+---
+
 ## 1. Artifact overview
 
 | Component | What it is | Paper section |
