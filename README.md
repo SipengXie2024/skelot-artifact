@@ -400,9 +400,44 @@ and the field to read.
 | 10,025 distinct skeletons, 47.60% reduction | same | `corpus.unique_skeletons`, `corpus.reduction_ratio` |
 | 825 multi-member families | `base_emse/skeleton_families.json` | count of `families[]` with `family_size > 1` |
 | Table 1 rows for Ethereum, BSC, Arbitrum (35,215 / 24,406 / 30.69%, 14,444 / 9,996 / 30.79%, 2,895 / 2,225 / 23.14%) | `{eth,bsc,arb}_10k_emse/dataset_scan.json` | same three fields |
+| Table 1 window ranges on all four chains | same four `dataset_scan.json` files | min/max of `100 * windows[].metrics_local.reduction_ratio` |
 | Table 2 size buckets | `base_emse/dataset_scan.json` | `corpus.buckets` |
 | 1,672 code hashes on two or more chains, 145 on all four, 2,970 and 302 at skeleton level | `scripts/check_codehash_consistency_emse.py` | stdout |
 | 817 families, 9,220 singletons, 10,037 compile units, g1 rejecting 7 skeletons and 17 members, one family and three members degraded by a static jump | `compile_bench_emse_base_sorted.json` | `records[].grouping` |
+
+Table 1's window range uses `windows[].metrics_local`, which covers all distinct
+compilable bytecodes present in each window, including those seen in earlier
+windows. The `windows[].metrics` field covers only bytecodes first encountered
+in that window during the scan. The range is the minimum and maximum of
+`100 * metrics_local.reduction_ratio` across the ten non-overlapping 1K-block
+windows.
+
+Run the following command from the repository root to reproduce the four ranges
+from the shipped reference data.
+
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+for chain, folder in [("Base", "base_emse"), ("ETH", "eth_10k_emse"),
+                      ("BSC", "bsc_10k_emse"), ("ARB", "arb_10k_emse")]:
+    scan = json.loads((Path("data") / folder / "dataset_scan.json").read_text())
+    windows = scan["windows"]
+    assert len(windows) == 10, f"{chain}: expected ten windows"
+    rates = [100 * w["metrics_local"]["reduction_ratio"] for w in windows]
+    print(f"{chain}: [{min(rates):.2f}, {max(rates):.2f}]")
+PY
+```
+
+Expected output
+
+```text
+Base: [40.91, 42.42]
+ETH: [26.83, 28.43]
+BSC: [24.67, 27.13]
+ARB: [16.34, 21.03]
+```
 
 ### Compile side, RQ2
 
