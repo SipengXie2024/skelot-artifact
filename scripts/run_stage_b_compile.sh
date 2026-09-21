@@ -22,7 +22,11 @@ BIN="$(runner_bin skelot_compile_bench)"
 SCOPE="full_10k_emse_${CHAIN}"
 [[ "${CHAIN}" == "base" ]] && SCOPE="full_10k_emse_sorted"
 CACHE="${CACHE_ROOT}/stage_b_emse_${CHAIN}"
+# The Base file carries the _sorted suffix: ablation_817.py, rq4_three_series.py
+# and render_fig5_compile_cost.py read it under that name, which is also the
+# name of the shipped reference copy in data/.
 OUT="${RESULTS_ROOT}/compile_bench_emse_${CHAIN}.json"
+[[ "${CHAIN}" == "base" ]] && OUT="${RESULTS_ROOT}/compile_bench_emse_base_sorted.json"
 LOG="${RESULTS_ROOT}/logs/stage_b_emse_${CHAIN}_$(skelot_stamp).log"
 mkdir -p "${CACHE}"
 

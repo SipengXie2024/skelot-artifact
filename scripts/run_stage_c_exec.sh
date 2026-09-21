@@ -9,10 +9,13 @@
 # zero mismatches". It also builds and saves the runtime family registry that
 # every later replay loads, so run it before run_stage_replay.sh.
 #
-# Registry filename hazard: the driver names its registry from the skeleton and
-# classify modes alone, so a Base run and an Arbitrum run would both want
-# skeleton_registry_full_emse.bin. This script gives each chain its own
-# --registry path to keep them apart.
+# Registry handling: --registry is read-only for the driver, so it is passed
+# only when the per-chain file already exists. On a first run the driver builds
+# the registry itself and saves it next to --out under the fixed name
+# skeleton_registry_full_emse.bin, derived from the skeleton and classify modes
+# alone, so a Base run and an Arbitrum run would otherwise overwrite each
+# other's file. This script renames it to the per-chain path that
+# run_stage_replay.sh reads.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
@@ -32,6 +35,15 @@ if [[ ! -d "${CACHE}/per_hash" || ! -d "${CACHE}/skelot_emse" ]]; then
     exit 1
 fi
 
+# Where the driver saves the registry when it builds one itself (next to --out).
+REG_BUILT="$(dirname "${OUT}")/skeleton_registry_full_emse.bin"
+REG_FLAG=()
+if [[ -f "${REG}" ]]; then
+    REG_FLAG=(--registry "${REG}")
+else
+    echo "no registry at ${REG}; the driver builds one during this run" | tee -a "${LOG}"
+fi
+
 skelot_banner "Stage C (${CHAIN})" >>"${LOG}"
 "${BIN}" \
     --bench-dir "${BENCH_DIR}" \
@@ -40,7 +52,16 @@ skelot_banner "Stage C (${CHAIN})" >>"${LOG}"
     --skeleton-mode emse --only-mode both \
     --start-block "${START}" --block-count "${COUNT}" \
     --sample-every 1 --rounds 1 --warmup 0 \
-    --registry "${REG}" \
+    "${REG_FLAG[@]}" \
     --out "${OUT}" 2>&1 | tee -a "${LOG}"
+
+if [[ ! -f "${REG}" ]]; then
+    if [[ ! -f "${REG_BUILT}" ]]; then
+        echo "driver finished but left no registry at ${REG_BUILT}" >&2
+        exit 1
+    fi
+    mv "${REG_BUILT}" "${REG}"
+    echo "registry saved as ${REG}" | tee -a "${LOG}"
+fi
 
 echo "Stage C ${CHAIN} done. JSON: ${OUT}, registry: ${REG}, log: ${LOG}"

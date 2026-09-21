@@ -14,7 +14,7 @@ import json
 
 import numpy as np
 
-from paths import inp, open_text, out
+from paths import RESOLVED, inp, open_text, out
 
 TARGETS = (0.50, 0.75, 0.90, 0.95, 0.99)
 
@@ -89,7 +89,8 @@ def main():
                      match_units=ph["n_units"], match_mb=ph["total_o_bytes"] / 1e6))
 
     out("rq4_three_series.json").write_text(json.dumps(
-        {"total_exec_us": total, "rows": rows}, indent=2))
+        {"total_exec_us": total, "rows": rows,
+         "inputs": [str(p) for p in RESOLVED]}, indent=2))
 
     hdr = (f"{'target':>7} | {'SkelOT':>7} {'MB':>7} | {'per-hash own':>13} {'MB':>7}"
            f" | {'per-hash match':>15} {'MB':>8} | {'sel-':>5} {'share':>7}")

@@ -16,7 +16,7 @@ Writes data/ablation_817.json.
 import collections
 import json
 
-from paths import inp, out
+from paths import RESOLVED, inp, out
 
 ORDER = ["small", "medium", "large", "huge"]
 
@@ -78,6 +78,7 @@ def main():
                           skelot_mb=total["skelot_b"] / 1e6, allvar_mb=total["allvar_b"] / 1e6),
                corpus_wall=dict(naive_s=ph["total_compile_seconds"],
                                 skelot_s=sp["total_compile_seconds"]))
+    result["inputs"] = [str(p) for p in RESOLVED]
     out("ablation_817.json").write_text(json.dumps(result, indent=2))
 
     hdr = (f"{'bucket':>7} {'fams':>5} {'memb':>6} | {'Naive':>8} {'SkelOT':>7} {'AV':>7} "

@@ -9,6 +9,7 @@ ARTIFACT_ROOT, DATA_ROOT or RESULTS_ROOT to move any of it.
 """
 
 import os
+import sys
 import subprocess
 from pathlib import Path
 
@@ -26,18 +27,36 @@ def out(name):
     return p
 
 
+# Every path inp() resolved in this process, in order, so an analysis script
+# can stamp its output with the inputs it actually read.
+RESOLVED = []
+
+# SKELOT_REQUIRE_RESULTS=1 refuses the reference copy under data/ and fails
+# when a fresh result is missing from results/.
+REQUIRE_RESULTS = os.environ.get("SKELOT_REQUIRE_RESULTS", "") not in ("", "0")
+
+
 def inp(*names):
     """First of `names` that exists, checked under results/ before data/.
 
     A name may also be given as a fallback list, e.g. inp("a.tsv", "a.tsv.zst").
+    Each resolution is printed to stderr and tagged, so a run that silently
+    picked up the shipped reference copy instead of a fresh result is visible.
     """
-    for root in (RESULTS, DATA):
+    roots = (RESULTS,) if REQUIRE_RESULTS else (RESULTS, DATA)
+    for root in roots:
         for name in names:
             p = root / name
             if p.exists():
+                tag = "REFERENCE copy, not a fresh result" if root == DATA else "fresh result"
+                print(f"[paths] {name}: {p} ({tag})", file=sys.stderr)
+                RESOLVED.append(p)
                 return p
+    searched = f"{RESULTS}" if REQUIRE_RESULTS else f"{RESULTS} or {DATA}"
+    hint = ("SKELOT_REQUIRE_RESULTS is set, so data/ was not searched. "
+            if REQUIRE_RESULTS else "")
     raise FileNotFoundError(
-        f"none of {list(names)} found under {RESULTS} or {DATA}. "
+        f"none of {list(names)} found under {searched}. {hint}"
         "Run the measurement that produces it, or check DATA_ROOT/RESULTS_ROOT."
     )
 

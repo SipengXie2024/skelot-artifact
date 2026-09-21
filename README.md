@@ -262,9 +262,18 @@ python3 scripts/render_fig5_compile_cost.py
 python3 scripts/render_fig6_ablation.py
 ```
 
-Input is `states/`. Output is
-`results/compile_bench_emse_<chain>.json` plus a `.units.jsonl` sibling, and the
-compiled artifacts under `$CACHE_ROOT`.
+Input is `states/`. Output is `results/compile_bench_emse_base_sorted.json`
+for Base, the name the analysis scripts and the shipped reference copy use, and
+`results/compile_bench_emse_<chain>.json` for the other chains, each with a
+`.units.jsonl` sibling, plus the compiled artifacts under `$CACHE_ROOT`.
+
+The analysis and figure scripts look for each input under `results/` first and
+fall back to the reference copy in `data/`. Every resolution is printed to
+stderr, tagged `fresh result` or `REFERENCE copy, not a fresh result`, and
+`ablation_817.json` and `rq4_three_series.json` carry an `inputs` list with the
+paths they read. Set `SKELOT_REQUIRE_RESULTS=1` to make a script fail instead
+of falling back, so a tree without a fresh result cannot report the paper's
+numbers as its own.
 
 | Run | Wall clock, 16 threads | Cache on disk |
 |---|---|---|
@@ -296,9 +305,13 @@ Input is `states/`, `txs/`, and both compile caches. Output is
 single-threaded by design, because the correctness comparison needs a
 deterministic per-transaction order. RAM UNKNOWN.
 
-The registry filename is derived from the skeleton and classify modes alone, so
-a Base run and an Arbitrum run would otherwise overwrite each other's registry.
-The scripts give each chain its own path. This actually happened during the
+`--registry` is read-only for the driver. On a first run, when the per-chain
+file does not exist, the script omits the flag, the driver builds the registry
+and saves it next to the JSON as `skeleton_registry_full_emse.bin`, and the
+script renames it to the per-chain name above. Later runs pass the flag and
+load the file. The driver's own filename is derived from the skeleton and
+classify modes alone, so without the rename a Base run and an Arbitrum run
+would overwrite each other's registry. This actually happened during the
 campaign and cost a run.
 
 ### 6.5 Replay arms, for the end-to-end table, RQ3 and RQ4
@@ -497,7 +510,7 @@ research contribution and are grouped separately in `SKELOT-CHANGES.md`.
 
 ### The paired runtime comparison
 
-The paper's RQ3 numbers (1,842 invoked family members over 99 sampled blocks, 1,171 faster / 644 equivalent / 27 slower after Benjamini-Hochberg correction, median speedup 1.31x with bootstrap 95% CI [1.286, 1.345], median dispatch 23.08 us under Naive AOT against 18.12 us under SkelOT, and the Section 7.1 family-size strata 1.07x / 1.58x) come from `data/paired_emse_base_sampled100_20260909T065454Z.json`, produced by `skeleton_vs_perhash_bench` under the EMSE boundary on the machine in Section 2 with the sorted-schedule compile caches, and recomputed into `data/paired_stats_emse_sampled100_20260909.json` by `scripts/recompute_paired_stats.py`. The run took 2 min 28 s and 1.9 GB peak RSS; its log with the toolchain banner is `data/logs/paired_emse_base_sampled100_20260909T065454Z.log`. An evaluator who runs `run_stage_replay.sh paired` against a freshly built cache and then `recompute_paired_stats.py` should see the same member count and verdict split up to a handful of contracts, and a median in the same range; the absolute microsecond figures depend on the host and are expected to differ.
+The paper's RQ3 numbers (1,842 invoked family members over 99 sampled blocks, 1,171 faster / 644 equivalent / 27 slower after Benjamini-Hochberg correction, median speedup 1.31x with bootstrap 95% CI [1.286, 1.345], median dispatch 23.08 us under Naive AOT against 18.12 us under SkelOT, and the Section 7.1 family-size strata 1.07x / 1.58x) come from `data/paired_emse_base_sampled100_20260909T065454Z.json`, produced by `skeleton_vs_perhash_bench` under the EMSE boundary on the machine in Section 2 with the sorted-schedule compile caches, and recomputed into `data/paired_stats_emse_sampled100_20260909.json` by `scripts/recompute_paired_stats.py`. The run took 2 min 28 s and 1.9 GB peak RSS; its log with the toolchain banner is `data/logs/paired_emse_base_sampled100_20260909T065454Z.log`. An evaluator who runs `run_stage_replay.sh paired` against a freshly built cache and then `recompute_paired_stats.py` should see the same member count and verdict split up to a handful of contracts, and a median in the same range; the absolute microsecond figures depend on the host and are expected to differ. The bootstrap interval is resampled over the 1,842 members of this one run, so it describes the sampling spread inside that run, not the spread of the median between runs or between hosts, which it does not measure.
 
 ### The single-block smoke ratio
 
