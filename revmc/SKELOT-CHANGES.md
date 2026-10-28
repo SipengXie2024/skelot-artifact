@@ -11,14 +11,14 @@ happen to live in the same tree.
 |---|---|
 | Upstream project | `paradigmxyz/revmc` |
 | Upstream base commit (merge base) | `4995ac64fb4e564df05b74e645bf0929c0dd5b1f` (2026-01-23) |
-| Snapshot commit of the SkelOT prototype | `9acff1288acb046b11cdaf2e5af0aeb20d271e49`, branch `jit-integration` (2026-08-02) |
+| Snapshot commit of the SkelOT prototype | `a67eeb1cfa274006529e77afc0ea10c87d4ecd4e`, branch `jit-integration` (2026-08-02) |
 | Range statistics | 137 files changed, 45,174 insertions, 887 deletions over 181 commits |
 | Machine-readable diff | `upstream.diff` in this directory |
 
 `upstream.diff` is the output of
 
 ```bash
-git diff 4995ac64fb4e564df05b74e645bf0929c0dd5b1f..9acff1288acb046b11cdaf2e5af0aeb20d271e49 \
+git diff 4995ac64fb4e564df05b74e645bf0929c0dd5b1f..a67eeb1cfa274006529e77afc0ea10c87d4ecd4e \
     -- crates/ Cargo.toml examples/runner/Cargo.toml examples/runner/build.rs \
        examples/runner/src/common.rs examples/runner/src/lib.rs examples/runner/src/main.rs \
        tests/state-tests/ scripts/

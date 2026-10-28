@@ -494,7 +494,7 @@ inspection) and the ones behind Table 5.
 
 `revmc/SKELOT-CHANGES.md` is the full account. In short, the merge base with
 `paradigmxyz/revmc` is `4995ac64fb4e564df05b74e645bf0929c0dd5b1f` and the
-snapshot is `9acff1288acb046b11cdaf2e5af0aeb20d271e49`. Five source files are new
+snapshot is `a67eeb1cfa274006529e77afc0ea10c87d4ecd4e`. Five source files are new
 inside `crates/`, everything else there is an in-place edit, and the whole
 compiler-side contribution is roughly 1,900 added lines across nine files. The
 rest of the delta is the measurement harness, which upstream did not have.
